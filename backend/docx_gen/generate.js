@@ -54,15 +54,15 @@ function sectionHeader(text) {
 }
 
 /**
- * Bullet point — plain "–" dash prefix so it renders identically in every
- * Word / LibreOffice version. No numbering XML = no square-box rendering bug.
+ * Bullet point — uses "•" (U+2022) in Calibri font directly as a TextRun.
+ * No Word numbering XML = no square-box rendering bug across viewers.
  * bold_ranges: list of strings to bold within the text.
  */
 function bullet(text, bold_ranges = []) {
   const runs = [];
 
-  // Build dash prefix
-  runs.push(new TextRun({ text: "–  ", font: FONT, size: BODY_PT, color: "333333" }));
+  // Inline bullet character in Calibri — renders correctly in Word, LibreOffice, PDF
+  runs.push(new TextRun({ text: "•  ", font: FONT, size: BODY_PT }));
 
   if (!bold_ranges || bold_ranges.length === 0) {
     runs.push(new TextRun({ text, font: FONT, size: BODY_PT }));
