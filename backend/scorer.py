@@ -26,44 +26,68 @@ OLLAMA_MODEL = "llama3.2:3b"
 # Use Haiku for scoring (cheap), keep Sonnet only for resume/cover letter
 SCORE_MODEL = "claude-haiku-4-5"
 
-CANDIDATE_SUMMARY = """
-Geet Bhute | Dublin, Ireland | MSc CS UCD (2025-26)
-Skills: Java, Python, TypeScript, Spring Boot, FastAPI, React, Next.js, LangChain,
-  PostgreSQL, Docker, Kubernetes, GitHub Actions, Azure (Certified), AWS
-Experience: 2 SWE internships (Spring Boot, Flask, Docker, CI/CD, published paper)
-Projects: Distributed Event Booking (microservices), BankingApp-Resilience (Kubernetes)
-Certifications: Azure, AWS, Kubernetes, Spring Boot
-Target: ONLY software engineering / AI / ML / backend / full-stack developer roles.
-NOT interested in: sales, account executive, account manager, business development,
-  marketing, HR, finance, legal, customer success, product manager, management consulting.
+CANDIDATE_RESUME = """
+Geet Prashant Bhute | Dublin, Ireland | geetbhute18@gmail.com | github.com/Geet42 | linkedin.com/in/geetbhute
+
+MSc Computer Science (Negotiated Learning) — University College Dublin, Sep 2025–Present
+B.Tech Computer Science, First Class Honours — RCOEM Nagpur, Dec 2021–May 2025
+
+Skills: Java, Python, TypeScript, JavaScript, SQL | Spring Boot, FastAPI, Flask, React, Next.js, LangChain
+Databases: PostgreSQL, MySQL, ChromaDB, Supabase
+DevOps/Cloud: Docker, Kubernetes, GitHub Actions, Azure (Certified), AWS, Linux, Vercel
+Tools: Git, Postman, Swagger, REST APIs
+Concepts: OOP, Microservices, CI/CD, REST API Design, Agile, Resilience4j, Circuit Breakers
+
+Experience:
+Software Engineering Intern | Tajshree Autowheels Pvt. Ltd. | May–Aug 2025
+- Developed, tested, and maintained Java and Spring Boot payment/booking backend with auth and refund logic,
+  processing 100+ validated transactions across 3 service modules.
+- Troubleshot 12+ defects via structured logging, reducing API error rate by 30%; automated deployments
+  via Docker and GitHub Actions CI/CD cutting release time under 10 minutes.
+
+Software Engineering Intern | RCOEM | Dec 2024–May 2025
+- Built Flask REST API endpoints for backend inference service, cutting prediction latency by 35%
+  through preprocessing optimisation with consistent sub-second response times.
+- Containerised full backend stack with Docker and configured GitHub Actions CI/CD, reducing environment
+  setup to under 5 minutes; published in JISEM 2025.
+
+Projects:
+Distributed University Event Booking System | Java 17, Spring Boot, Spring Cloud Gateway, PostgreSQL, Docker, Resilience4j
+- Designed Booking Service across 4-microservice architecture enforcing PENDING_PAYMENT state transitions.
+- Integrated Resilience4j circuit breakers; zero cascading failures in stress tests (team of 3).
+
+BankingApp-Resilience | Java 17, Spring Boot, Resilience4j, Docker, Kubernetes, Chaos Toolkit
+- Built resilient banking microservices with circuit breakers and retry logic via Docker and Kubernetes.
+- Validated fault tolerance via Chaos Toolkit experiments confirming zero cascading failures.
+
+Certifications: Spring Boot (Coding Shuttle) | Azure (Cloud, Security, Data Storage) | AWS Cloud Practitioner | Kubernetes & Linux (Linux Foundation)
+GitHub: github.com/Geet42
+Target: entry-level / intern / graduate software engineering, AI/ML, backend, full-stack roles in Ireland.
+NOT a match: sales, account executive, marketing, HR, finance, legal, customer success, product manager.
 """
 
-# Compact single-job prompt for Ollama
-SCORE_PROMPT_SINGLE = """Score this job for a software engineering candidate. Respond ONLY with valid JSON, no markdown.
+SCORE_PROMPT_SINGLE = """You are a technical recruiter and ATS expert. Analyze the match between the candidate and job. Respond ONLY with valid JSON — no markdown, no explanation.
 
-FIRST CHECK: If the job title/description is NOT a software engineering, AI/ML, backend, frontend,
-or developer role (e.g. it is sales, account executive, marketing, HR, finance, legal, business
-development, customer success, product management) — immediately return score=1, verdict="Skip",
-verdict_reason="Not a software engineering role".
+STEP 1 — ROLE CHECK: If the job is NOT software engineering / AI / ML / backend / frontend / developer (e.g. sales, account executive, marketing, HR, finance, legal, business development, customer success, product management) → return {{"score":1,"verdict":"Skip","verdict_reason":"Not a software engineering role","matches":[],"gaps":[],"red_flags":["Not a technical role"],"ats_keywords_present":[],"ats_keywords_missing":[],"required_skills_score":0,"preferred_skills_score":0,"cultural_fit_score":0,"ats_score":0,"apply_recommendation":"No"}}
 
-CANDIDATE: {candidate}
+STEP 2 — WEIGHTED SCORING (only for engineering roles):
+- Required Skills/Experience (50 pts): % of hard JD requirements met by candidate
+- Preferred/Desirable Skills (25 pts): % of preferred JD skills met
+- Cultural/Soft Fit (10 pts): teamwork, CI/CD discipline, collaboration signals
+- ATS Keyword Coverage (15 pts): % of JD keywords present in candidate profile
+Score out of 100 → divide by 10 for final score. Be precise, do not inflate.
+
+STEP 3 — VERDICT:
+8-10 = Strong Apply, 6-7 = Apply, 4-5 = Maybe, 1-3 = Skip
+
+CANDIDATE RESUME + GITHUB (github.com/Geet42):
+{candidate}
 
 JOB: {title} at {company}
 {description}
 
-JSON:
-{{"score":<1-10>,"verdict":"<Strong Apply|Apply|Maybe|Skip>","verdict_reason":"<one sentence>","matches":["<m1>","<m2>","<m3>"],"gaps":["<g1>","<g2>"],"red_flags":["<f1>"],"ats_keywords_present":["<k1>","<k2>"],"ats_keywords_missing":["<k1>","<k2>"],"required_skills_score":<0-50>,"preferred_skills_score":<0-25>,"cultural_fit_score":<0-10>,"ats_score":<0-15>,"apply_recommendation":"<Yes|Borderline|No>"}}"""
-
-# Batch prompt — scores 5 jobs in ONE Claude call
-SCORE_PROMPT_BATCH = """Score each job for the candidate. Respond ONLY with a valid JSON array of {n} objects, no markdown.
-
-CANDIDATE: {candidate}
-
-JOBS:
-{jobs_block}
-
-Return exactly {n} JSON objects in an array, one per job, same order:
-[{{"score":<1-10>,"verdict":"<Strong Apply|Apply|Maybe|Skip>","verdict_reason":"<one sentence>","matches":["<m1>","<m2>"],"gaps":["<g1>","<g2>"],"red_flags":[],"ats_keywords_present":["<k1>"],"ats_keywords_missing":["<k1>"],"required_skills_score":<0-50>,"preferred_skills_score":<0-25>,"cultural_fit_score":<0-10>,"ats_score":<0-15>,"apply_recommendation":"<Yes|Borderline|No>"}}, ...]"""
+Respond with exactly this JSON:
+{{"score":<1-10>,"verdict":"<Strong Apply|Apply|Maybe|Skip>","verdict_reason":"<one precise sentence citing specific match or gap>","matches":["<explicit evidence of match>","<evidence>","<evidence>"],"gaps":["<specific missing requirement>","<gap>"],"red_flags":["<dealbreaker if any>"],"ats_keywords_present":["<exact JD keyword found in candidate profile>"],"ats_keywords_missing":["<JD keyword absent from profile>"],"required_skills_score":<0-50>,"preferred_skills_score":<0-25>,"cultural_fit_score":<0-10>,"ats_score":<0-15>,"apply_recommendation":"<Yes|Borderline|No>"}}"""
 
 
 def _desc(job: dict, max_chars: int = 1500) -> str:
@@ -107,7 +131,7 @@ def _ollama_available() -> bool:
 
 def _score_with_ollama(job: dict) -> dict:
     prompt = SCORE_PROMPT_SINGLE.format(
-        candidate=CANDIDATE_SUMMARY,
+        candidate=CANDIDATE_RESUME,
         title=job.get("title") or "",
         company=job.get("company") or "",
         description=_desc(job),
@@ -122,36 +146,28 @@ def _score_with_ollama(job: dict) -> dict:
     return _parse_json(resp.json()["response"])
 
 
-def _score_batch_with_claude(jobs: list[dict]) -> list[dict]:
-    """
-    Score up to 5 jobs in a SINGLE Claude Haiku call.
-    5x fewer API calls + 12x cheaper model = ~60x cost reduction vs original.
-    """
-    jobs_block = ""
-    for i, job in enumerate(jobs, 1):
-        jobs_block += f"\nJOB {i}: {job.get('title','')} at {job.get('company','')}\n{_desc(job, 800)}\n"
-
-    prompt = SCORE_PROMPT_BATCH.format(
-        n=len(jobs),
-        candidate=CANDIDATE_SUMMARY,
-        jobs_block=jobs_block,
+def _score_single_with_claude(job: dict) -> dict:
+    """Score one job with Claude Haiku using the full recruiter analysis prompt."""
+    prompt = SCORE_PROMPT_SINGLE.format(
+        candidate=CANDIDATE_RESUME,
+        title=job.get("title") or "",
+        company=job.get("company") or "",
+        description=_desc(job),
     )
-
     msg = client.messages.create(
         model=SCORE_MODEL,
-        max_tokens=300 * len(jobs),   # ~300 tokens per job score
-        system="You are a technical recruiter. Respond only with valid JSON.",
+        max_tokens=600,
+        system="You are a technical recruiter and ATS expert. Respond only with valid JSON.",
         messages=[{"role": "user", "content": prompt}],
     )
     result = _parse_json(msg.content[0].text)
-    # Ensure it's a list
-    if isinstance(result, dict):
-        result = [result]
+    if isinstance(result, list):
+        result = result[0]
     return result
 
 
 def score_job(job: dict) -> dict:
-    """Score a single job. Uses Ollama → Claude Haiku fallback."""
+    """Score a single job. Uses Ollama (free) → Claude Haiku fallback."""
     if not _desc(job) or len(_desc(job)) < 50:
         return {**job, "ai_score": None, "ai_error": "No description"}
 
@@ -160,13 +176,11 @@ def score_job(job: dict) -> dict:
             analysis = _score_with_ollama(job)
             engine   = "ollama"
         else:
-            results = _score_batch_with_claude([job])
-            analysis = results[0]
+            analysis = _score_single_with_claude(job)
             engine   = "claude-haiku"
     except Exception as e:
         try:
-            results  = _score_batch_with_claude([job])
-            analysis = results[0]
+            analysis = _score_single_with_claude(job)
             engine   = "claude-haiku-fallback"
         except Exception as e2:
             return {**job, "ai_score": None, "ai_error": str(e2)}

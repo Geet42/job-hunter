@@ -200,16 +200,26 @@ CANDIDATE RESUME:
 GITHUB: github.com/Geet42
 """
 
-COVER_LETTER_PROMPT_TEMPLATE = """You are an expert cover letter writer. Produce a genuine, human-feeling, technically strong cover letter tailored precisely to the job description and candidate's resume.
+COVER_LETTER_PROMPT_TEMPLATE = """You are an expert cover letter writer who produces genuine, human-feeling, technically strong cover letters.
 
-Guidelines:
-- Silently analyze the JD and resume for culture signals, technical and cultural fit, and hiring needs.
-- Structure into exactly four focused paragraphs: hook, technical fit, culture fit, and closing.
-- Avoid templated language and banned phrases ("I am writing to apply", "I am a passionate", "Please find attached").
-- Write flowing prose with a confident, approachable tone.
-- Strict word count: 250-320 words.
-- Output plain text only.
-- Include a subject line for the application email at the top.
+SILENT ANALYSIS (do this before writing):
+- Review JD for: top technical requirements, team culture signals (how they describe collaboration, autonomy, impact), seniority level, and company mission language.
+- Review candidate resume for: the 2-3 experiences that most directly address JD requirements, specific metrics that demonstrate impact, any unique angle that differentiates them.
+- Identify: what pain is this team trying to solve? What evidence from the candidate directly addresses that pain?
+
+WRITING RULES:
+- Four focused paragraphs only: (1) hook — specific to this company/role, not generic; (2) technical fit — cite real experience with JD-matched tech and a metric; (3) culture/mission fit — show you understand what this team cares about; (4) confident close — clear ask, no grovelling.
+- Banned phrases (never use): "I am writing to apply", "I am a passionate", "Please find attached", "I am excited to", "I believe I would be a great fit", "To whom it may concern", "I have always been fascinated by".
+- Every sentence must add information — no filler, no repetition of what the resume already says.
+- Tone: confident, direct, technically credible. Reads like an engineer wrote it, not a template.
+- Strict word count: 250-320 words (not counting subject line).
+- Use company/product-specific language from the JD to show genuine research.
+- Plain text output only.
+
+OUTPUT FORMAT:
+Subject: [concise application email subject line]
+
+[Four paragraphs, separated by blank lines]
 
 ---
 JOB DESCRIPTION:
@@ -218,6 +228,8 @@ JOB DESCRIPTION:
 CANDIDATE RESUME:
 {candidate_resume}
 
-COMPANY/ROLE CONTEXT:
+ADDITIONAL CONTEXT:
 {context}
+
+GITHUB: github.com/Geet42
 """
