@@ -95,6 +95,13 @@ def get_already_scored_urls() -> set:
     return {row["url"] for row in (result.data or [])}
 
 
+def delete_job(job_id: str) -> bool:
+    """Permanently delete a job from the database."""
+    db = get_client()
+    result = db.table("jobs").delete().eq("id", job_id).execute()
+    return True
+
+
 def update_job_status(job_id: str, status: str) -> dict:
     """Update application status: new | saved | applied | interview | rejected | offer."""
     db = get_client()

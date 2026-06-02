@@ -34,10 +34,12 @@ def _strip_html(text: str) -> str:
     return text
 
 
-# Titles containing these → not engineering roles at all
-_NON_ENGINEERING = {
+# ── Title-level filters ──────────────────────────────────────
+
+# Titles containing these → not engineering roles
+_NON_ENGINEERING = [
     "account executive", "account manager", "account director",
-    "sales representative", "sales manager",
+    "sales representative", "sales manager", "sales engineer",
     "business development", "business analyst",
     "marketing manager", "marketing executive", "marketing specialist",
     "human resources", " hr ", "recruiter", "talent acquisition",
@@ -47,31 +49,86 @@ _NON_ENGINEERING = {
     "product manager", "product owner",
     "account specialist", "partnership manager", "growth manager",
     "commercial graduate", "solution consultant", "pre-sales",
-}
+    "data analyst", "business intelligence", "scrum master",
+    "technical writer", "it support", "systems administrator",
+    "network engineer", "security analyst", "penetration tester",
+]
 
-# Titles containing these → too senior for Geet's profile
-_TOO_SENIOR = {
+# Titles containing these → too senior for entry-level candidate
+_TOO_SENIOR = [
     "staff engineer", "staff software", "staff backend", "staff frontend",
-    "principal engineer", "principal software",
+    "principal engineer", "principal software", "principal developer",
     "senior engineer", "senior software", "senior backend", "senior frontend",
     "senior developer", "senior java", "senior python", "senior full stack",
+    "senior data", "senior ml", "senior ai",
     "lead engineer", "lead developer", "lead software",
     "engineering manager", "director of engineering", "vp of engineering",
-    "head of engineering", "chief",
-}
+    "head of engineering", "head of software", "chief technology",
+    "architect ", "solution architect", "enterprise architect",
+    "tech lead", "technical lead",
+]
+
+# ── Description-level experience requirement filter ──────────
+
+# Matches: "3+ years", "4 years of experience", "minimum 5 years", "at least 3 years"
+# etc. — flags roles explicitly requiring 3+ years professional experience
+_SENIOR_EXP_RE = re.compile(
+    r'\b([3-9]|1[0-9])\+?\s*years?\s*(of\s*)?(professional\s*)?(industry\s*)?(work\s*)?(software\s*)?'
+    r'(engineering\s*)?(development\s*)?(experience|exp)\b'
+    r'|minimum\s*(of\s*)?([3-9]|1[0-9])\s*years?\b'
+    r'|at\s*least\s*([3-9]|1[0-9])\s*years?\b'
+    r'|\b([3-9]|1[0-9])\+\s*yrs?\b',
+    re.IGNORECASE,
+)
+
+# Stripe-style: "2-12+ years ... does not include internships"
+_EXCL_INTERN_RE = re.compile(
+    r'\b2\+?\s*[-–]\s*\d+\+?\s*years?\b.*?\bdoes\s*not\s*include\s*(internship|co.?op)\b'
+    r'|\bdoes\s*not\s*include\s*(internship|co.?op)\b',
+    re.IGNORECASE | re.DOTALL,
+)
+
+# Entry-level positive signals — if present, keep regardless of year count
+_ENTRY_SIGNALS_RE = re.compile(
+    r'\b(intern|internship|entry.level|entry\s+level|graduate|new\s+grad|fresh(er)?|'
+    r'0[-–]2\s*years?|junior|associate\s+engineer|associate\s+developer)\b',
+    re.IGNORECASE,
+)
 
 
 def _is_engineering_role(job: dict) -> bool:
-    """Return True only if the job is a software engineering role at entry/mid level."""
+    """
+    Three-layer filter:
+      1. Title contains non-engineering keywords → reject
+      2. Title contains senior/lead/architect keywords → reject
+      3. Description requires 3+ years professional experience → reject
+         (unless the title/description has strong entry-level signals)
+    """
     title = (job.get("title") or "").lower()
+    desc  = (job.get("description") or "")
+
+    # Layer 1 — non-engineering title
     for phrase in _NON_ENGINEERING:
         if phrase in title:
-            print(f"[scraper] Filtered (non-eng): {job.get('title')}")
+            print(f"[scraper] Filtered (non-eng title): {job.get('title')}")
             return False
+
+    # Layer 2 — too-senior title
     for phrase in _TOO_SENIOR:
         if phrase in title:
-            print(f"[scraper] Filtered (too senior): {job.get('title')}")
+            print(f"[scraper] Filtered (too senior title): {job.get('title')}")
             return False
+
+    # Layer 3 — description says 3+ years required (skip if entry-level signals present)
+    if _SENIOR_EXP_RE.search(desc) and not _ENTRY_SIGNALS_RE.search(title + " " + desc[:500]):
+        print(f"[scraper] Filtered (3+ yrs required): {job.get('title')}")
+        return False
+
+    # Stripe pattern: requires 2+ years EXCLUDING internships
+    if _EXCL_INTERN_RE.search(desc):
+        print(f"[scraper] Filtered (excludes intern exp): {job.get('title')}")
+        return False
+
     return True
 
 

@@ -279,6 +279,13 @@ export default function Home() {
     a.click();
   };
 
+  const hideJob = async (jobId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await fetch(`${API}/jobs/${jobId}`, { method: "DELETE" });
+    setAllJobs((prev) => prev.filter((j) => j.id !== jobId));
+    if (selected?.id === jobId) setSelected(null);
+  };
+
   const scoreCustomJD = async () => {
     if (!customJD.trim()) return;
     setGenerating(true);
@@ -412,7 +419,15 @@ export default function Home() {
                   <span className={`text-xs ${job.status !== "new" ? "text-indigo-500 font-medium" : "text-gray-400"}`}>
                     {STATUS_LABELS[job.status] || job.status}
                   </span>
-                  {job.salary && <span className="text-xs text-green-600">{safeStr(job.salary)}</span>}
+                  <div className="flex items-center gap-2">
+                    {job.salary && <span className="text-xs text-green-600">{safeStr(job.salary)}</span>}
+                    <button
+                      onClick={(e) => hideJob(job.id, e)}
+                      title="Hide this job"
+                      className="text-gray-300 hover:text-red-400 text-xs leading-none px-1 transition-colors">
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </button>
             ))}

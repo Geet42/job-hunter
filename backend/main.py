@@ -17,7 +17,7 @@ import os
 from scraper import scrape_all_sources, run_all_search_queries
 from scorer import score_jobs_batch, score_job
 from tailor import tailor_resume, generate_cover_letter, analyze_gaps
-from db import upsert_jobs, get_jobs, get_job, update_job_status, get_already_scored_urls
+from db import upsert_jobs, get_jobs, get_job, update_job_status, get_already_scored_urls, delete_job
 
 app = FastAPI(title="Job Hunter API", version="1.0.0")
 
@@ -140,6 +140,16 @@ def get_job_detail(job_id: str):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return job
+
+
+@app.delete("/jobs/{job_id}")
+def delete_job_endpoint(job_id: str):
+    """Permanently delete a job (hide irrelevant ones)."""
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    delete_job(job_id)
+    return {"deleted": True, "id": job_id}
 
 
 @app.patch("/jobs/{job_id}/status")
