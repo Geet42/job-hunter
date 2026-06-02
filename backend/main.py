@@ -16,7 +16,7 @@ import os
 
 from scraper import scrape_all_sources, run_all_search_queries
 from scorer import score_jobs_batch, score_job
-from tailor import tailor_resume, generate_cover_letter
+from tailor import tailor_resume, generate_cover_letter, analyze_gaps
 from db import upsert_jobs, get_jobs, get_job, update_job_status, get_already_scored_urls
 
 app = FastAPI(title="Job Hunter API", version="1.0.0")
@@ -47,6 +47,7 @@ class TailorRequest(BaseModel):
     job_description: Optional[str] = None
     job_title: Optional[str] = ""
     company: Optional[str] = ""
+    approved_suggestions: Optional[list[dict]] = None   # gap-analysis suggestions user accepted
 
 
 class CoverLetterRequest(BaseModel):
@@ -150,11 +151,20 @@ def update_status(job_id: str, body: StatusUpdate):
     return update_job_status(job_id, body.status)
 
 
+@app.post("/tailor/gap-analysis")
+def gap_analysis_endpoint(req: TailorRequest):
+    """Analyse gaps between candidate resume and job, return actionable suggestions."""
+    description, title, company = _resolve_job(req.job_id, req.job_description, req.job_title, req.company)
+    suggestions = analyze_gaps(description, title, company)
+    return {"suggestions": suggestions}
+
+
 @app.post("/tailor/resume")
 def tailor_resume_endpoint(req: TailorRequest):
-    """Generate tailored resume → returns metadata + download URL for DOCX."""
+    """Generate tailored resume → returns metadata + download URL for DOCX.
+    Optionally accepts approved_suggestions from gap-analysis to incorporate."""
     description, title, company = _resolve_job(req.job_id, req.job_description, req.job_title, req.company)
-    result = tailor_resume(description, title, company)
+    result = tailor_resume(description, title, company, req.approved_suggestions or [])
     return {
         "filename": result["filename"],
         "download_url": f"/tailor/resume/download/{result['filename']}",

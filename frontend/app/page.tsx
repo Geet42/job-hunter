@@ -98,6 +98,20 @@ export default function Home() {
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState("");
 
+  // Gap analysis
+  type GapSuggestion = {
+    gap: string;
+    impact: string;
+    suggestion: string;
+    new_text: string;
+    section: string;
+    risk: "safe" | "stretch";
+    rationale: string;
+    accepted: boolean;
+  };
+  const [gapSuggestions, setGapSuggestions] = useState<GapSuggestion[]>([]);
+  const [gapLoading, setGapLoading] = useState(false);
+
   // Keyword search
   const [keyword, setKeyword] = useState("");
 
@@ -174,6 +188,38 @@ export default function Home() {
     if (selected?.id === jobId) setSelected((s) => s ? { ...s, status } : s);
   };
 
+  const analyzeGaps = async () => {
+    if (!selected) return;
+    setGapLoading(true);
+    setGapSuggestions([]);
+    setGenError("");
+    setTab("resume");
+    setResumeResult(null);
+    try {
+      const res = await fetch(`${API}/tailor/gap-analysis`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: selected.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || "Server error");
+      }
+      const data = await res.json();
+      setGapSuggestions((data.suggestions || []).map((s: Omit<GapSuggestion, "accepted">) => ({ ...s, accepted: true })));
+    } catch (e: unknown) {
+      setGenError(e instanceof Error ? e.message : "Gap analysis failed");
+    }
+    setGapLoading(false);
+  };
+
+  const toggleSuggestion = (index: number) => {
+    setGapSuggestions(prev => prev.map((s, i) => i === index ? { ...s, accepted: !s.accepted } : s));
+  };
+
+  const acceptAll = () => setGapSuggestions(prev => prev.map(s => ({ ...s, accepted: true })));
+  const rejectAll = () => setGapSuggestions(prev => prev.map(s => ({ ...s, accepted: false })));
+
   const generateResume = async () => {
     if (!selected) return;
     setGenerating(true);
@@ -181,10 +227,14 @@ export default function Home() {
     setTab("resume");
     setResumeResult(null);
     try {
+      const accepted = gapSuggestions.filter(s => s.accepted);
       const res = await fetch(`${API}/tailor/resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job_id: selected.id }),
+        body: JSON.stringify({
+          job_id: selected.id,
+          approved_suggestions: accepted.length > 0 ? accepted : null,
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: res.statusText }));
@@ -337,7 +387,7 @@ export default function Home() {
             )}
             {jobs.map((job) => (
               <button key={job.id}
-                onClick={() => { setSelected(job); setTab("analysis"); setResumeResult(null); setCoverLetter(""); setGenError(""); }}
+                onClick={() => { setSelected(job); setTab("analysis"); setResumeResult(null); setCoverLetter(""); setGenError(""); setGapSuggestions([]); }}
                 className={`w-full text-left p-3 border-b hover:bg-gray-50 transition-colors ${
                   selected?.id === job.id ? "bg-indigo-50 border-l-4 border-l-indigo-500" : ""
                 }`}>
@@ -461,9 +511,13 @@ export default function Home() {
                       Apply ↗
                     </a>
                   )}
-                  <button onClick={generateResume} disabled={generating}
+                  <button onClick={analyzeGaps} disabled={generating || gapLoading}
+                    className="bg-amber-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-amber-600 disabled:opacity-50">
+                    {gapLoading ? "Analysing…" : "Analyse Gaps"}
+                  </button>
+                  <button onClick={generateResume} disabled={generating || gapLoading}
                     className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-emerald-700 disabled:opacity-50">
-                    {generating && tab === "resume" ? "Generating…" : "Tailor Resume"}
+                    {generating && tab === "resume" ? "Generating…" : gapSuggestions.some(s => s.accepted) ? `Tailor Resume (${gapSuggestions.filter(s=>s.accepted).length} fixes)` : "Tailor Resume"}
                   </button>
                   <button onClick={generateCover} disabled={generating}
                     className="bg-violet-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-violet-700 disabled:opacity-50">
@@ -617,10 +671,89 @@ export default function Home() {
               {/* ── Resume tab ── */}
               {tab === "resume" && (
                 <div className="space-y-4">
-                  {!resumeResult && !generating && (
+
+                  {/* Gap loading state */}
+                  {gapLoading && (
+                    <div className="bg-white rounded-xl border p-6 text-center shadow-sm">
+                      <div className="text-amber-500 animate-pulse font-medium">Analysing gaps between your resume and this JD…</div>
+                      <p className="text-gray-400 text-sm mt-1">Comparing requirements, identifying missing keywords, suggesting honest fixes</p>
+                    </div>
+                  )}
+
+                  {/* Gap suggestions */}
+                  {!gapLoading && gapSuggestions.length > 0 && !resumeResult && (
+                    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+                      <div className="p-4 border-b bg-amber-50 flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-amber-900">
+                            {gapSuggestions.length} Gap{gapSuggestions.length !== 1 ? "s" : ""} Found
+                          </h3>
+                          <p className="text-xs text-amber-700 mt-0.5">
+                            Review each suggestion. Accept the ones you want included in your resume, then click &ldquo;Tailor Resume&rdquo;.
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={acceptAll} className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">Accept All</button>
+                          <button onClick={rejectAll} className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded hover:bg-red-100">Reject All</button>
+                        </div>
+                      </div>
+
+                      <div className="divide-y">
+                        {gapSuggestions.map((s, i) => (
+                          <div key={i} className={`p-4 transition-colors ${s.accepted ? "bg-white" : "bg-gray-50 opacity-60"}`}>
+                            <div className="flex items-start gap-3">
+                              <input type="checkbox" checked={s.accepted} onChange={() => toggleSuggestion(i)}
+                                className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 cursor-pointer shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{s.section}</span>
+                                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                                    s.risk === "safe"
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-orange-100 text-orange-700"
+                                  }`}>
+                                    {s.risk === "safe" ? "✓ Safe" : "⚠ Stretch"}
+                                  </span>
+                                </div>
+
+                                <p className="text-sm font-medium text-gray-900 mt-1">{s.gap}</p>
+                                <p className="text-xs text-red-600 mt-0.5">{s.impact}</p>
+
+                                <div className="mt-2 p-2 bg-indigo-50 border border-indigo-100 rounded text-xs">
+                                  <span className="font-semibold text-indigo-700">Suggested fix: </span>
+                                  <span className="text-indigo-900">{s.suggestion}</span>
+                                </div>
+
+                                <div className="mt-2 p-2 bg-emerald-50 border border-emerald-100 rounded">
+                                  <p className="text-xs font-semibold text-emerald-700 mb-0.5">Exact text to use:</p>
+                                  <p className="text-xs text-emerald-900 font-mono leading-relaxed">{s.new_text}</p>
+                                </div>
+
+                                <p className="text-xs text-gray-500 mt-1.5 italic">{s.rationale}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-semibold text-green-700">{gapSuggestions.filter(s => s.accepted).length}</span> accepted ·{" "}
+                          <span className="font-semibold text-gray-400">{gapSuggestions.filter(s => !s.accepted).length}</span> rejected
+                        </p>
+                        <button onClick={generateResume} disabled={generating}
+                          className="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+                          {generating ? "Generating…" : `Generate Resume with ${gapSuggestions.filter(s=>s.accepted).length} Fix${gapSuggestions.filter(s=>s.accepted).length !== 1 ? "es" : ""}`}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!gapLoading && gapSuggestions.length === 0 && !resumeResult && !generating && (
                     <div className="bg-white rounded-xl border p-8 text-center text-gray-400 shadow-sm">
-                      <p className="font-medium">Click &ldquo;Tailor Resume&rdquo; above</p>
-                      <p className="text-sm mt-1">Claude rewrites your resume specifically for this JD and exports a DOCX ready to submit.</p>
+                      <p className="font-medium text-gray-700">Step 1 — Analyse Gaps</p>
+                      <p className="text-sm mt-1">Click <span className="text-amber-600 font-medium">&ldquo;Analyse Gaps&rdquo;</span> to see what&apos;s missing from your resume for this role.</p>
+                      <p className="text-sm mt-1 text-gray-400">Accept the suggested fixes, then click <span className="text-emerald-700 font-medium">&ldquo;Tailor Resume&rdquo;</span> to generate a DOCX with all improvements applied.</p>
                     </div>
                   )}
                   {generating && tab === "resume" && (

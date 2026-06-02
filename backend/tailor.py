@@ -147,13 +147,94 @@ GITHUB: github.com/Geet42
 """
 
 
-def tailor_resume(job_description: str, job_title: str = "", company: str = "") -> dict:
+GAP_ANALYSIS_PROMPT = """You are a senior technical recruiter and resume strategist.
+
+Analyze the gaps between the candidate's resume and this job description. Then suggest SPECIFIC, HONEST changes that close those gaps — only based on real experience the candidate already has.
+
+RULES:
+- Never suggest inventing experience. Suggestions must be grounded in the candidate's actual background.
+- Each suggestion must be actionable and specific (exact new bullet text, exact skill to add, exact reframing).
+- Categorise risk: "safe" = truthful reframing of existing experience; "stretch" = implied skill from related work (be honest about this).
+- Prioritise suggestions by impact — put highest-impact ones first.
+- Max 8 suggestions total.
+
+For each gap, output ONE suggestion object. Respond ONLY with a valid JSON array, no markdown.
+
+Each object MUST have exactly these fields:
+{{
+  "gap": "<specific thing missing from the resume vs JD requirement>",
+  "impact": "<why this gap hurts the application — one sentence>",
+  "suggestion": "<exactly what to change: add/reframe/reorder — be specific about section and text>",
+  "new_text": "<the exact new bullet, skill entry, or summary sentence to use — ready to paste>",
+  "section": "<Skills | Summary | Experience bullet | Project bullet>",
+  "risk": "<safe | stretch>",
+  "rationale": "<why the candidate actually has this or can honestly claim it>"
+}}
+
+JOB DESCRIPTION:
+Title: {job_title}
+Company: {company}
+
+{job_description}
+
+CANDIDATE RESUME:
+{candidate_resume}
+
+GITHUB: github.com/Geet42
+
+Return a JSON array of suggestion objects. No other text.
+"""
+
+
+def analyze_gaps(job_description: str, job_title: str = "", company: str = "") -> list[dict]:
+    """
+    Identify gaps between candidate resume and JD, return specific actionable suggestions.
+    Each suggestion has: gap, impact, suggestion, new_text, section, risk, rationale.
+    """
+    prompt = GAP_ANALYSIS_PROMPT.format(
+        job_title=job_title,
+        company=company,
+        job_description=job_description[:4000],
+        candidate_resume=CANDIDATE_RESUME_TEXT,
+    )
+
+    message = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=2000,
+        messages=[{"role": "user", "content": prompt}],
+    )
+
+    raw = message.content[0].text.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.rsplit("```", 1)[0]
+
+    suggestions = json.loads(raw)
+    if isinstance(suggestions, dict):
+        suggestions = [suggestions]
+    return suggestions
+
+
+def tailor_resume(job_description: str, job_title: str = "", company: str = "",
+                  approved_suggestions: list[dict] = None) -> dict:
     """
     Generate a tailored resume as a DOCX file.
     Returns: dict with docx_path, keyword_matches, and resume_json.
     """
+    # Build approved suggestions block if any
+    suggestions_block = ""
+    if approved_suggestions:
+        suggestions_block = "\n\nAPPROVED RESUME IMPROVEMENTS (candidate has accepted these — incorporate all of them):\n"
+        for i, s in enumerate(approved_suggestions, 1):
+            suggestions_block += f"\n{i}. Section: {s.get('section','')}\n"
+            suggestions_block += f"   Gap covered: {s.get('gap','')}\n"
+            suggestions_block += f"   Use this text: {s.get('new_text','')}\n"
+        suggestions_block += "\nEnsure every approved improvement appears in the final resume.\n"
+
     prompt = RESUME_STRUCTURED_PROMPT.format(
-        job_description=f"Title: {job_title}\nCompany: {company}\n\n{job_description[:4000]}",
+        job_description=f"Title: {job_title}\nCompany: {company}\n\n{job_description[:4000]}{suggestions_block}",
         candidate_resume=CANDIDATE_RESUME_TEXT,
     )
 
