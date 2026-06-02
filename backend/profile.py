@@ -97,16 +97,16 @@ TARGET_ROLES = [
     "Junior Software Engineer",
 ]
 
-# Search queries to run on each job board
+# Search queries — focused on intern / entry-level / graduate roles only
 SEARCH_QUERIES = [
     {"keyword": "software engineer intern", "location": "Dublin, Ireland"},
-    {"keyword": "java developer junior", "location": "Dublin, Ireland"},
-    {"keyword": "full stack intern", "location": "Dublin, Ireland"},
+    {"keyword": "software engineer graduate", "location": "Dublin, Ireland"},
+    {"keyword": "java developer entry level", "location": "Dublin, Ireland"},
+    {"keyword": "backend engineer intern", "location": "Dublin, Ireland"},
     {"keyword": "AI engineer intern", "location": "Dublin, Ireland"},
     {"keyword": "machine learning intern", "location": "Ireland"},
     {"keyword": "graduate software engineer", "location": "Ireland"},
-    {"keyword": "entry level software engineer", "location": "Dublin, Ireland"},
-    {"keyword": "junior developer", "location": "Dublin, Ireland"},
+    {"keyword": "junior software engineer", "location": "Dublin, Ireland"},
 ]
 
 # Scoring weights (must sum to 100)

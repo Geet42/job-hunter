@@ -34,10 +34,10 @@ def _strip_html(text: str) -> str:
     return text
 
 
-# Titles that contain these words are NOT engineering roles — filter before scoring
+# Titles containing these → not engineering roles at all
 _NON_ENGINEERING = {
     "account executive", "account manager", "account director",
-    "sales representative", "sales manager", "sales engineer",
+    "sales representative", "sales manager",
     "business development", "business analyst",
     "marketing manager", "marketing executive", "marketing specialist",
     "human resources", " hr ", "recruiter", "talent acquisition",
@@ -46,16 +46,31 @@ _NON_ENGINEERING = {
     "operations manager", "office manager", "project manager",
     "product manager", "product owner",
     "account specialist", "partnership manager", "growth manager",
-    "commercial graduate",
+    "commercial graduate", "solution consultant", "pre-sales",
+}
+
+# Titles containing these → too senior for Geet's profile
+_TOO_SENIOR = {
+    "staff engineer", "staff software", "staff backend", "staff frontend",
+    "principal engineer", "principal software",
+    "senior engineer", "senior software", "senior backend", "senior frontend",
+    "senior developer", "senior java", "senior python", "senior full stack",
+    "lead engineer", "lead developer", "lead software",
+    "engineering manager", "director of engineering", "vp of engineering",
+    "head of engineering", "chief",
 }
 
 
 def _is_engineering_role(job: dict) -> bool:
-    """Return True if the job title looks like a software/engineering role."""
+    """Return True only if the job is a software engineering role at entry/mid level."""
     title = (job.get("title") or "").lower()
     for phrase in _NON_ENGINEERING:
         if phrase in title:
-            print(f"[scraper] Skipping non-engineering role: {job.get('title')}")
+            print(f"[scraper] Filtered (non-eng): {job.get('title')}")
+            return False
+    for phrase in _TOO_SENIOR:
+        if phrase in title:
+            print(f"[scraper] Filtered (too senior): {job.get('title')}")
             return False
     return True
 
@@ -136,7 +151,7 @@ def scrape_jsearch(keyword: str, location: str = "Ireland", max_results: int = 2
                     "title":       _to_str(job.get("job_title")),
                     "company":     _to_str(job.get("employer_name")),
                     "location":    _jsearch_location(job),
-                    "description": job.get("job_description"),
+                    "description": _strip_html(job.get("job_description") or ""),
                     "url":         apply_url,
                     "salary":      _jsearch_salary(job),
                     "job_type":    job.get("job_employment_type"),
@@ -207,7 +222,7 @@ def scrape_adzuna(keyword: str, location: str = "ireland", max_results: int = 20
                 "title":       _to_str(job.get("title")),
                 "company":     _to_str((job.get("company") or {}).get("display_name")),
                 "location":    _to_str((job.get("location") or {}).get("display_name")),
-                "description": job.get("description"),
+                "description": _strip_html(job.get("description") or ""),
                 "url":         job.get("redirect_url"),
                 "salary":      _adzuna_salary(job),
                 "job_type":    job.get("contract_type"),
@@ -250,7 +265,7 @@ def scrape_reed(keyword: str, location: str = "Ireland", max_results: int = 20) 
                 "title":       _to_str(job.get("jobTitle")),
                 "company":     _to_str(job.get("employerName")),
                 "location":    _to_str(job.get("locationName")),
-                "description": job.get("jobDescription"),
+                "description": _strip_html(job.get("jobDescription") or ""),
                 "url":         job.get("jobUrl"),
                 "salary":      _reed_salary(job),
                 "job_type":    job.get("jobType"),
@@ -386,7 +401,7 @@ def run_all_search_queries(max_per_source: int = 10) -> list[dict]:
     print("[scraper] ── JSearch broad search (1 API call) ──")
     try:
         jsearch_jobs = scrape_jsearch(
-            keyword="software engineer OR java developer OR full stack OR AI engineer OR machine learning intern OR graduate developer",
+            keyword="software engineer intern OR graduate software engineer OR java developer entry level OR backend engineer intern OR AI engineer intern OR junior developer OR new grad software engineer",
             location="Ireland",
             max_results=50,
         )

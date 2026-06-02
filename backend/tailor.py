@@ -58,62 +58,71 @@ Certifications
 Spring Boot Development (Coding Shuttle) | Microsoft Azure (Cloud, Security, Data Storage) | AWS Cloud Practitioner | Kubernetes and Linux (Linux Foundation)
 """
 
-RESUME_STRUCTURED_PROMPT = """You are a senior technical resume writer and ATS optimization expert.
+RESUME_STRUCTURED_PROMPT = """You are an elite technical resume writer who has helped hundreds of candidates land offers at FAANG and top-tier tech companies. Your task: produce a resume that passes ATS screening AND impresses a senior engineer interviewer — for this specific job description.
 
-Analyze the job description and candidate resume below. Produce a tailored resume as VALID JSON only — no markdown, no explanation, no code fences.
+STRICT RULES — violate any of these and the resume fails:
+1. Output ONLY valid JSON — zero markdown, zero code fences, zero explanation.
+2. Never invent experience. Only use facts from the candidate resume below.
+3. Every bullet = Action verb + specific technology/method + quantified result. No vague statements.
+4. Bullets must NOT contain **markdown** — plain text only. Bold terms go in bold_terms[] array only.
+5. Top 3 hard skills from JD must appear in Skills section AND at least twice across bullets.
+6. Mirror JD language exactly where truthful (copy verb phrases, not synonyms).
+7. Summary: 2 tight sentences max. Lead with the top JD requirement. End with "Dublin, available immediately."
+8. Remove any experience/project bullet that does not map to a JD keyword. No filler.
+9. Skills section: put JD's primary tech stack first in each category.
+10. Reframe project bullets to highlight the same problems the JD describes.
 
-Analysis rules (apply before writing):
-- Identify top 5 hard skills from JD. Top 3 soft skills/methodologies.
-- Extract exact verb phrases from JD responsibilities.
-- Identify the 2 strongest experiences + 2-3 strongest projects most relevant to the JD.
-- Every bullet must map to a JD keyword. Remove bullets that do not.
-- Mirror JD language exactly where truthful.
-- Top 3 JD hard skills must appear at least 3 times across the resume.
-- Use past tense. Action-Result format with metrics. Max 2 bullets per entry.
-- Bold terms should be the primary tech and metrics in each bullet.
+ANALYSIS PHASE (do this silently before writing JSON):
+- Extract top 5 hard skills + top 3 methodologies from JD.
+- Extract exact verb phrases from JD responsibilities section.
+- Identify which 2 experiences and 2-3 projects from candidate's resume best match JD requirements.
+- Map every candidate bullet to a JD keyword — drop bullets with no mapping.
+- Identify metrics that can be linked to JD pain points (latency, scale, reliability, error rates).
 
-Output EXACTLY this JSON schema:
+Output EXACTLY this JSON schema — all fields required:
 {{
   "name": "GEET PRASHANT BHUTE",
   "contact": "Dublin, Ireland | +353 894 991 592 | geetbhute18@gmail.com | github.com/Geet42 | linkedin.com/in/geetbhute | geetbhute.vercel.app",
-  "summary": "<two-line summary: top 3 JD keywords, strongest credential, location, availability — no buzzwords>",
+  "summary": "<2 sentences max: sentence 1 = top 3 JD keywords + candidate's strongest matching credential; sentence 2 = value prop + location + availability>",
   "skills": {{
-    "Languages": "<comma-separated, JD primary stack first>",
-    "Frameworks": "<comma-separated>",
-    "Databases": "<comma-separated>",
-    "DevOps / Cloud": "<comma-separated>",
-    "Tools": "<comma-separated>",
-    "Concepts": "<comma-separated>"
+    "Languages": "<JD primary language first, then others from candidate>",
+    "Frameworks": "<JD frameworks first>",
+    "Databases": "<relevant DBs>",
+    "DevOps / Cloud": "<relevant DevOps tools>",
+    "Tools": "<relevant tools>",
+    "Concepts": "<JD methodology terms first>"
   }},
   "experience": [
     {{
-      "title": "<job title>",
+      "title": "<exact job title from candidate resume>",
       "company": "<company>",
       "dates": "<dates>",
       "location": "<location>",
-      "bullets": ["<bullet 1>", "<bullet 2>"],
-      "bold_terms": ["<term to bold>", "<metric to bold>"]
+      "bullets": [
+        "<Action verb> <specific tech/method from JD> <quantified result — must have a number or % or scale>",
+        "<Action verb> <different JD keyword> <quantified result>"
+      ],
+      "bold_terms": ["<primary JD tech to bold>", "<metric to bold e.g. 30%>", "<scale number to bold>"]
     }}
   ],
   "projects": [
     {{
       "name": "<project name>",
-      "tech": ["<tech1>", "<tech2>"],
+      "tech": ["<JD-relevant tech from project>"],
       "context": "<course/context>",
-      "bullets": ["<bullet 1>", "<bullet 2>"],
-      "bold_terms": ["<term to bold>"]
+      "bullets": [
+        "<Action verb> <JD-relevant architecture/pattern> <quantified or concrete outcome>",
+        "<Action verb> <JD-relevant reliability/scale/API concept> <concrete result>"
+      ],
+      "bold_terms": ["<JD tech term to bold>", "<metric or scale to bold>"]
     }}
   ],
   "education": [
-    {{
-      "degree": "<degree>",
-      "institution": "<institution>",
-      "dates": "<dates>"
-    }}
+    {{"degree": "<degree>", "institution": "<institution>", "dates": "<dates>"}}
   ],
-  "certifications": ["<cert1>", "<cert2>"],
+  "certifications": ["<most relevant certs first>"],
   "keyword_matches": [
-    {{"keyword": "<JD keyword>", "status": "<found|implied|missing>", "evidence": "<where on resume>"}}
+    {{"keyword": "<exact JD keyword>", "status": "<found|implied|missing>", "evidence": "<exactly where on resume — section + which bullet>"}}
   ]
 }}
 
