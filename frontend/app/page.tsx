@@ -28,6 +28,17 @@ type Job = {
   status: string;
 };
 
+/** Safely render any field that might be a raw JSON object from older scraper runs. */
+function safeStr(val: unknown): string {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object") {
+    const o = val as Record<string, unknown>;
+    return String(o.name || o.display_name || o.cityName || "");
+  }
+  return String(val);
+}
+
 const VERDICT_COLOR: Record<string, string> = {
   "Strong Apply": "bg-green-100 text-green-800 border-green-300",
   Apply: "bg-blue-100 text-blue-800 border-blue-300",
@@ -258,8 +269,8 @@ export default function Home() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-gray-900 truncate">{job.title || "Untitled"}</p>
-                    <p className="text-xs text-gray-500 truncate">{job.company}</p>
-                    <p className="text-xs text-gray-400">{job.source} · {job.location}</p>
+                    <p className="text-xs text-gray-500 truncate">{safeStr(job.company)}</p>
+                    <p className="text-xs text-gray-400">{safeStr(job.source)} · {safeStr(job.location)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <span className={`text-lg ${SCORE_COLOR(job.ai_score)}`}>
@@ -310,8 +321,8 @@ export default function Home() {
               <div className="bg-white rounded-xl border p-5 shadow-sm">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">{selected.title}</h2>
-                    <p className="text-gray-600">{selected.company} · {selected.location}</p>
+                    <h2 className="text-xl font-bold text-gray-900">{safeStr(selected.title)}</h2>
+                    <p className="text-gray-600">{safeStr(selected.company)} · {safeStr(selected.location)}</p>
                     <div className="flex gap-2 mt-1 flex-wrap">
                       {selected.source && <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{selected.source}</span>}
                       {selected.job_type && <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{selected.job_type}</span>}

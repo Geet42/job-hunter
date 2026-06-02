@@ -33,6 +33,21 @@ def _strip_html(text: str) -> str:
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
+
+def _to_str(val) -> str:
+    """Safely coerce any API value to a plain string.
+    Some APIs (JSearch, Indeed) return company/location as dicts."""
+    if not val:
+        return ""
+    if isinstance(val, dict):
+        return (
+            val.get("name")
+            or val.get("display_name")
+            or val.get("cityName")
+            or ", ".join(str(v) for v in val.values() if v)
+        )
+    return str(val).strip()
+
 RAPIDAPI_KEY   = os.environ.get("RAPIDAPI_KEY", "")
 ADZUNA_APP_ID  = os.environ.get("ADZUNA_APP_ID", "")
 ADZUNA_API_KEY = os.environ.get("ADZUNA_API_KEY", "")
@@ -92,8 +107,8 @@ def scrape_jsearch(keyword: str, location: str = "Ireland", max_results: int = 2
                 )
                 results.append({
                     "source":      _jsearch_source(job),
-                    "title":       job.get("job_title"),
-                    "company":     job.get("employer_name"),
+                    "title":       _to_str(job.get("job_title")),
+                    "company":     _to_str(job.get("employer_name")),
                     "location":    _jsearch_location(job),
                     "description": job.get("job_description"),
                     "url":         apply_url,
@@ -163,9 +178,9 @@ def scrape_adzuna(keyword: str, location: str = "ireland", max_results: int = 20
         for job in resp.json().get("results", []):
             results.append({
                 "source":      "Adzuna",
-                "title":       job.get("title"),
-                "company":     (job.get("company") or {}).get("display_name"),
-                "location":    (job.get("location") or {}).get("display_name"),
+                "title":       _to_str(job.get("title")),
+                "company":     _to_str((job.get("company") or {}).get("display_name")),
+                "location":    _to_str((job.get("location") or {}).get("display_name")),
                 "description": job.get("description"),
                 "url":         job.get("redirect_url"),
                 "salary":      _adzuna_salary(job),
@@ -206,9 +221,9 @@ def scrape_reed(keyword: str, location: str = "Ireland", max_results: int = 20) 
         for job in resp.json().get("results", []):
             results.append({
                 "source":      "Reed",
-                "title":       job.get("jobTitle"),
-                "company":     job.get("employerName"),
-                "location":    job.get("locationName"),
+                "title":       _to_str(job.get("jobTitle")),
+                "company":     _to_str(job.get("employerName")),
+                "location":    _to_str(job.get("locationName")),
                 "description": job.get("jobDescription"),
                 "url":         job.get("jobUrl"),
                 "salary":      _reed_salary(job),
