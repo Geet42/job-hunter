@@ -169,41 +169,31 @@ def score_job(job: dict) -> dict:
 
 def score_jobs_batch(jobs: list[dict]) -> list[dict]:
     """
-    Score all jobs efficiently:
-    - Jobs with no description → skip (score=None)
-    - Ollama available → score each locally (FREE)
-    - Ollama down → batch 5 jobs per Claude Haiku call (cheap)
+    Score all jobs — one job per AI call for guaranteed correctness.
+    Batching was removed because zip(batch, analyses) silently mismatches
+    jobs when Claude returns analyses out of order or short-counts.
+
+    Priority: Ollama (free/local) → Claude Haiku (cheap fallback)
     """
-    # Split: scorable vs no-description
-    scorable   = [j for j in jobs if len(_desc(j)) >= 50]
-    no_desc    = [j for j in jobs if len(_desc(j)) < 50]
-    no_desc    = [{**j, "ai_score": None, "ai_error": "No description"} for j in no_desc]
+    scorable = [j for j in jobs if len(_desc(j)) >= 50]
+    no_desc  = [{**j, "ai_score": None, "ai_error": "No description"}
+                for j in jobs if len(_desc(j)) < 50]
 
     print(f"[scorer] {len(scorable)} jobs to score, {len(no_desc)} skipped (no description)")
 
     use_ollama = _ollama_available()
-    if use_ollama:
-        print("[scorer] Using Ollama (FREE) — no Claude cost")
-    else:
-        print(f"[scorer] Ollama unavailable — using Claude Haiku in batches of 5 (~{len(scorable)//5 + 1} API calls)")
+    print(f"[scorer] Engine: {'Ollama (FREE)' if use_ollama else 'Claude Haiku'}")
 
     scored = []
-    if use_ollama:
-        for job in scorable:
-            scored.append(score_job(job))
-    else:
-        # Batch 5 jobs per Claude call
-        BATCH = 5
-        for i in range(0, len(scorable), BATCH):
-            batch = scorable[i:i + BATCH]
-            try:
-                analyses = _score_batch_with_claude(batch)
-                for job, analysis in zip(batch, analyses):
-                    scored.append(_merge(job, analysis, "claude-haiku"))
-            except Exception as e:
-                print(f"[scorer] Batch {i//BATCH + 1} failed: {e} — scoring individually")
-                for job in batch:
-                    scored.append(score_job(job))
+    for i, job in enumerate(scorable):
+        try:
+            result = score_job(job)
+            scored.append(result)
+            engine = "ollama" if use_ollama else "claude-haiku"
+            print(f"[scorer] {i+1}/{len(scorable)} scored: {job.get('title','?')[:40]} → {result.get('ai_score')}/10 ({engine})")
+        except Exception as e:
+            print(f"[scorer] Failed to score '{job.get('title','?')}': {e}")
+            scored.append({**job, "ai_score": None, "ai_error": str(e)})
 
     all_results = scored + no_desc
     all_results.sort(key=lambda j: j.get("ai_score") or 0, reverse=True)
