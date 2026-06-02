@@ -34,6 +34,32 @@ def _strip_html(text: str) -> str:
     return text
 
 
+# Titles that contain these words are NOT engineering roles — filter before scoring
+_NON_ENGINEERING = {
+    "account executive", "account manager", "account director",
+    "sales representative", "sales manager", "sales engineer",
+    "business development", "business analyst",
+    "marketing manager", "marketing executive", "marketing specialist",
+    "human resources", " hr ", "recruiter", "talent acquisition",
+    "customer success", "customer support", "customer experience",
+    "legal counsel", "paralegal", "finance manager", "financial analyst",
+    "operations manager", "office manager", "project manager",
+    "product manager", "product owner",
+    "account specialist", "partnership manager", "growth manager",
+    "commercial graduate",
+}
+
+
+def _is_engineering_role(job: dict) -> bool:
+    """Return True if the job title looks like a software/engineering role."""
+    title = (job.get("title") or "").lower()
+    for phrase in _NON_ENGINEERING:
+        if phrase in title:
+            print(f"[scraper] Skipping non-engineering role: {job.get('title')}")
+            return False
+    return True
+
+
 def _to_str(val) -> str:
     """Safely coerce any API value to a plain string.
     Some APIs (JSearch, Indeed) return company/location as dicts."""
@@ -319,13 +345,13 @@ def scrape_all_sources(
         except Exception as e:
             print(f"[scraper] {source} error: {e}")
 
-    # Deduplicate by URL
+    # Deduplicate by URL, then filter non-engineering titles
     seen, unique = set(), []
     for job in results:
         key = job.get("url") or f"{job.get('title','')}-{job.get('company','')}"
         if key and key not in seen:
             seen.add(key)
-            if job.get("title") or job.get("description"):
+            if (job.get("title") or job.get("description")) and _is_engineering_role(job):
                 unique.append(job)
     return unique
 
@@ -347,6 +373,8 @@ def run_all_search_queries(max_per_source: int = 10) -> list[dict]:
     def _add(jobs):
         added = 0
         for job in jobs:
+            if not _is_engineering_role(job):
+                continue
             key = job.get("url") or f"{job.get('title','')}-{job.get('company','')}"
             if key and key not in seen:
                 seen.add(key)

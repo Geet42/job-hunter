@@ -5,6 +5,7 @@ Cover letter output: plain text.
 """
 
 import os
+import re
 import json
 import subprocess
 import tempfile
@@ -151,6 +152,17 @@ def tailor_resume(job_description: str, job_title: str = "", company: str = "") 
         raw = raw.rsplit("```", 1)[0]
 
     resume_data = json.loads(raw)
+
+    # Strip **bold** markdown from all text fields — the DOCX generator
+    # handles bolding via bold_terms[], so literal asterisks must be removed.
+    def _strip_bold(text: str) -> str:
+        return re.sub(r"\*\*(.+?)\*\*", r"\1", text) if text else text
+
+    resume_data["summary"] = _strip_bold(resume_data.get("summary", ""))
+    for exp in resume_data.get("experience", []):
+        exp["bullets"] = [_strip_bold(b) for b in exp.get("bullets", [])]
+    for proj in resume_data.get("projects", []):
+        proj["bullets"] = [_strip_bold(b) for b in proj.get("bullets", [])]
 
     # Set output path
     safe_title = (job_title or "resume").replace(" ", "_").replace("/", "-")[:40]

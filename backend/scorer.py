@@ -33,11 +33,18 @@ Skills: Java, Python, TypeScript, Spring Boot, FastAPI, React, Next.js, LangChai
 Experience: 2 SWE internships (Spring Boot, Flask, Docker, CI/CD, published paper)
 Projects: Distributed Event Booking (microservices), BankingApp-Resilience (Kubernetes)
 Certifications: Azure, AWS, Kubernetes, Spring Boot
-Target: SWE/AI intern or entry-level, Ireland
+Target: ONLY software engineering / AI / ML / backend / full-stack developer roles.
+NOT interested in: sales, account executive, account manager, business development,
+  marketing, HR, finance, legal, customer success, product manager, management consulting.
 """
 
 # Compact single-job prompt for Ollama
-SCORE_PROMPT_SINGLE = """Score this job for the candidate. Respond ONLY with valid JSON, no markdown.
+SCORE_PROMPT_SINGLE = """Score this job for a software engineering candidate. Respond ONLY with valid JSON, no markdown.
+
+FIRST CHECK: If the job title/description is NOT a software engineering, AI/ML, backend, frontend,
+or developer role (e.g. it is sales, account executive, marketing, HR, finance, legal, business
+development, customer success, product management) — immediately return score=1, verdict="Skip",
+verdict_reason="Not a software engineering role".
 
 CANDIDATE: {candidate}
 
