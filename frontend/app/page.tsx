@@ -28,13 +28,26 @@ type Job = {
   status: string;
 };
 
-/** Safely render any field that might be a raw JSON object from older scraper runs. */
+/** Safely render any field that might be a raw JSON object/string from older scraper runs. */
 function safeStr(val: unknown): string {
   if (!val) return "";
-  if (typeof val === "string") return val;
-  if (typeof val === "object") {
+  if (typeof val === "string") {
+    const t = val.trim();
+    // Detect JSON strings like '{"name": "Salesforce", ...}' stored by old scraper
+    if (t.startsWith("{") || t.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(t);
+        if (parsed && typeof parsed === "object") {
+          const o = parsed as Record<string, unknown>;
+          return String(o.name || o.display_name || o.cityName || o.city || "");
+        }
+      } catch {}
+    }
+    return val;
+  }
+  if (typeof val === "object" && val !== null) {
     const o = val as Record<string, unknown>;
-    return String(o.name || o.display_name || o.cityName || "");
+    return String(o.name || o.display_name || o.cityName || o.city || "");
   }
   return String(val);
 }
@@ -324,7 +337,7 @@ export default function Home() {
                     <h2 className="text-xl font-bold text-gray-900">{safeStr(selected.title)}</h2>
                     <p className="text-gray-600">{safeStr(selected.company)} · {safeStr(selected.location)}</p>
                     <div className="flex gap-2 mt-1 flex-wrap">
-                      {selected.source && <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{selected.source}</span>}
+                      {selected.source && <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{safeStr(selected.source)}</span>}
                       {selected.job_type && <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{selected.job_type}</span>}
                       {selected.salary && <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">{selected.salary}</span>}
                     </div>

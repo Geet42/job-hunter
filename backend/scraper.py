@@ -137,7 +137,7 @@ def _jsearch_source(job: dict) -> str:
 
 
 def _jsearch_location(job: dict) -> str:
-    parts = [job.get("job_city"), job.get("job_state"), job.get("job_country")]
+    parts = [_to_str(job.get("job_city")), _to_str(job.get("job_state")), _to_str(job.get("job_country"))]
     return ", ".join(p for p in parts if p)
 
 

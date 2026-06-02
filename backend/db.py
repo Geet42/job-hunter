@@ -19,31 +19,37 @@ def get_client() -> Client:
 
 
 def upsert_jobs(jobs: list[dict]) -> list[dict]:
-    """Insert or update jobs by URL (deduplication key)."""
+    """Insert or update jobs by URL (deduplication key).
+
+    NOTE: `status` is intentionally excluded from the upsert payload so that
+    user-set statuses (saved / applied / interview / offer) are never overwritten
+    by a re-scrape. New rows get the DB column default ('new') automatically.
+    Status changes go through update_job_status() only.
+    """
     db = get_client()
     rows = []
     for job in jobs:
         row = {
-            "url": job.get("url") or f"{job.get('title','')}-{job.get('company','')}",
-            "title": job.get("title"),
-            "company": job.get("company"),
-            "location": job.get("location"),
-            "description": job.get("description"),
-            "source": job.get("source"),
-            "salary": job.get("salary"),
-            "job_type": job.get("job_type"),
-            "posted_date": job.get("posted_date"),
-            "ai_score": job.get("ai_score"),
-            "ai_verdict": job.get("ai_verdict"),
+            "url":               job.get("url") or f"{job.get('title','')}-{job.get('company','')}",
+            "title":             job.get("title"),
+            "company":           job.get("company"),
+            "location":          job.get("location"),
+            "description":       job.get("description"),
+            "source":            job.get("source"),
+            "salary":            job.get("salary"),
+            "job_type":          job.get("job_type"),
+            "posted_date":       job.get("posted_date"),
+            "ai_score":          job.get("ai_score"),
+            "ai_verdict":        job.get("ai_verdict"),
             "ai_verdict_reason": job.get("ai_verdict_reason"),
-            "ai_matches": job.get("ai_matches"),
-            "ai_gaps": job.get("ai_gaps"),
-            "ai_red_flags": job.get("ai_red_flags"),
+            "ai_matches":        job.get("ai_matches"),
+            "ai_gaps":           job.get("ai_gaps"),
+            "ai_red_flags":      job.get("ai_red_flags"),
             "ai_keywords_present": job.get("ai_keywords_present"),
             "ai_keywords_missing": job.get("ai_keywords_missing"),
-            "ai_apply": job.get("ai_apply"),
-            "ai_breakdown": job.get("ai_breakdown"),
-            "status": job.get("status", "new"),
+            "ai_apply":          job.get("ai_apply"),
+            "ai_breakdown":      job.get("ai_breakdown"),
+            # status excluded — DB default 'new' for inserts; user edits preserved on updates
         }
         rows.append(row)
 
@@ -75,8 +81,11 @@ def get_jobs(
 
 def get_job(job_id: str) -> dict:
     db = get_client()
-    result = db.table("jobs").select("*").eq("id", job_id).single().execute()
-    return result.data
+    try:
+        result = db.table("jobs").select("*").eq("id", job_id).single().execute()
+        return result.data
+    except Exception:
+        return None
 
 
 def get_already_scored_urls() -> set:

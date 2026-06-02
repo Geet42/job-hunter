@@ -2,6 +2,10 @@
 FastAPI backend — job search, scoring, tailoring endpoints.
 """
 
+# Load .env FIRST — before any local imports that read os.environ at module level
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
