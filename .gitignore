@@ -17,6 +17,8 @@ frontend/.next/
 
 # Generated DOCX resumes
 backend/outputs/
+backend/docx_gen/test_out.docx
+backend/docx_gen/*.docx
 
 # OS
 .DS_Store
