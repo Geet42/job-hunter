@@ -27,6 +27,11 @@ def upsert_jobs(jobs: list[dict]) -> list[dict]:
     Status changes go through update_job_status() only.
     """
     db = get_client()
+    # Deduplicate by URL before upserting — Supabase rejects batches with
+    # two rows that share the same conflict key (url).
+    seen_urls: set = set()
+    jobs = [j for j in jobs if (u := j.get("url") or f"{j.get('title','')}-{j.get('company','')}") and u not in seen_urls and not seen_urls.add(u)]  # type: ignore[func-returns-value]
+
     rows = []
     for job in jobs:
         row = {
@@ -98,8 +103,86 @@ def get_already_scored_urls() -> set:
 def delete_job(job_id: str) -> bool:
     """Permanently delete a job from the database."""
     db = get_client()
-    result = db.table("jobs").delete().eq("id", job_id).execute()
+    db.table("jobs").delete().eq("id", job_id).execute()
     return True
+
+
+def purge_bad_jobs() -> int:
+    """
+    Delete non-engineering / senior / irrelevant jobs from DB.
+    Called after each full search to keep the DB clean.
+    Returns count of deleted jobs.
+    """
+    import re
+    db = get_client()
+    all_jobs = db.table("jobs").select("id,title,description").execute().data or []
+
+    non_eng_words = [
+        "account executive", "account manager", "account director", "account development",
+        "sales", "marketing", "campaign", "human resources", " hr ", "recruiter",
+        "finance manager", "financial analyst", "accounting", "accountant",
+        "tax", "treasury", "audit", "regulatory", "compliance",
+        "customer success", "customer support", "product manager", "product owner",
+        "operations manager", "business analyst", "data analyst",
+        "civil engineer", "mechanical engineer", "electrical engineer",
+        "highway", "graphic design", "construction", "quantity surveyor",
+        # Physical/hardware engineering roles (from Reed Ireland)
+        "manufacturing engineer", "design engineer", "field service engineer",
+        "commissioning engineer", "process engineer", "quality engineer",
+        "maintenance engineer", "service engineer", "hvac", "estimator",
+        "biomedical engineer", "validation engineer", "environmental engineer",
+        "qa localization", "medical diagnostic", "localization engineer",
+        "graduate estimator", "junior structural", "junior mechanical",
+        "junior civil", "junior electrical",
+    ]
+    senior_words = [
+        "staff engineer", "principal engineer", "senior engineer", "senior developer",
+        "senior software", "lead engineer", "lead developer",
+        "engineering manager", "director of", "head of engineering",
+        "vp of", "chief technology",
+    ]
+    senior_exp_re = re.compile(
+        r'\b([3-9]|1[0-9])\+?\s*years?\b'
+        r'|minimum\s*(of\s*)?([3-9]|1[0-9])\s*years?\b'
+        r'|at\s*least\s*([3-9]|1[0-9])\s*years?\b'
+        r'|\b([3-9]|1[0-9])\+\s*yrs?\b',
+        re.IGNORECASE,
+    )
+    range_exp_re = re.compile(r'\b\d+\s*[-]\s*(\d+)\+?\s*years?\b', re.IGNORECASE)
+    do_not_apply_re = re.compile(
+        r'(intern|new\s*grad).*?please\s*do\s*not\s*apply'
+        r'|if\s+you\s+are\s+(an?\s+)?(intern|new\s*grad).*?do\s*not\s*apply',
+        re.IGNORECASE | re.DOTALL,
+    )
+    entry_re = re.compile(r'\b(intern|junior|graduate|entry.level|new\s*grad)\b', re.IGNORECASE)
+
+    deleted = 0
+    for job in all_jobs:
+        title = (job.get("title") or "").lower()
+        desc  = (job.get("description") or "")
+        title_entry = bool(entry_re.search(title))
+        should_delete = False
+
+        if any(w in title for w in non_eng_words):
+            should_delete = True
+        elif any(w in title for w in senior_words):
+            should_delete = True
+        elif do_not_apply_re.search(desc[:1000]):
+            should_delete = True
+        elif senior_exp_re.search(desc) and not title_entry:
+            should_delete = True
+        else:
+            for m in range_exp_re.finditer(desc):
+                if int(m.group(1)) >= 5 and not title_entry:
+                    should_delete = True
+                    break
+
+        if should_delete:
+            db.table("jobs").delete().eq("id", job["id"]).execute()
+            deleted += 1
+            print(f"[db] purged: {job.get('title','?')[:60]}")
+
+    return deleted
 
 
 def update_job_status(job_id: str, status: str) -> dict:

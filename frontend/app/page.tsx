@@ -68,6 +68,25 @@ const SCORE_COLOR = (score: number | null) => {
 
 const GOOD_VERDICTS = new Set(["Strong Apply", "Apply", "Maybe"]);
 
+/** Normalise source string → short display label + colour */
+function sourceInfo(raw: string): { label: string; color: string } {
+  const s = (raw || "").toLowerCase();
+  if (s.includes("linkedin"))    return { label: "LinkedIn",    color: "bg-blue-100 text-blue-700" };
+  if (s.includes("indeed"))      return { label: "Indeed",      color: "bg-indigo-100 text-indigo-700" };
+  if (s.includes("glassdoor"))   return { label: "Glassdoor",   color: "bg-green-100 text-green-700" };
+  if (s.includes("jobs.ie"))     return { label: "Jobs.ie",     color: "bg-orange-100 text-orange-700" };
+  if (s.includes("irishjobs"))   return { label: "IrishJobs",   color: "bg-red-100 text-red-700" };
+  if (s.includes("adzuna"))      return { label: "Adzuna",      color: "bg-purple-100 text-purple-700" };
+  if (s.includes("reed"))        return { label: "Reed",        color: "bg-pink-100 text-pink-700" };
+  if (s.includes("lever"))            return { label: "Career Site", color: "bg-gray-100 text-gray-600" };
+  if (s.includes("smartrecruiters")) return { label: "Career Site", color: "bg-gray-100 text-gray-600" };
+  if (s.includes("workday"))          return { label: "Career Site", color: "bg-cyan-100 text-cyan-700" };
+  if (s.includes("workable"))         return { label: "Career Site", color: "bg-teal-100 text-teal-700" };
+  if (s.includes("greenhouse") || s.includes("company career")) return { label: "Career Site", color: "bg-gray-100 text-gray-600" };
+  if (s.includes("google jobs") || s.includes("via google")) return { label: "Google Jobs", color: "bg-yellow-100 text-yellow-700" };
+  return { label: raw || "Job Board", color: "bg-gray-100 text-gray-500" };
+}
+
 const STATUS_OPTIONS = ["new", "saved", "applied", "interview", "rejected", "offer"];
 const STATUS_LABELS: Record<string, string> = {
   new: "New", saved: "Saved", applied: "Applied",
@@ -363,7 +382,7 @@ export default function Home() {
                 <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)}
                   className="border rounded px-2 py-1 text-sm flex-1">
                   <option value="">All sources</option>
-                  {sources.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {sources.map((s) => <option key={s} value={s}>{sourceInfo(s).label} ({s.length > 20 ? s.slice(0,20)+"…" : s})</option>)}
                 </select>
               )}
               <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
@@ -416,9 +435,14 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-1">
-                  <span className={`text-xs ${job.status !== "new" ? "text-indigo-500 font-medium" : "text-gray-400"}`}>
-                    {STATUS_LABELS[job.status] || job.status}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-xs ${job.status !== "new" ? "text-indigo-500 font-medium" : "text-gray-400"}`}>
+                      {STATUS_LABELS[job.status] || job.status}
+                    </span>
+                    {(() => { const si = sourceInfo(safeStr(job.source)); return (
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${si.color}`}>{si.label}</span>
+                    ); })()}
+                  </div>
                   <div className="flex items-center gap-2">
                     {job.salary && <span className="text-xs text-green-600">{safeStr(job.salary)}</span>}
                     <button
@@ -435,7 +459,8 @@ export default function Home() {
 
           {/* Custom JD scorer */}
           <div className="border-t p-3">
-            <p className="text-xs font-semibold text-gray-500 mb-1">PASTE ANY JD TO SCORE</p>
+            <p className="text-xs font-semibold text-gray-500 mb-1">SCORE A JOB FROM LINKEDIN / INDEED</p>
+            <p className="text-xs text-gray-400 mb-2">LinkedIn & Indeed block automated scraping. Copy a JD from any site and paste below to get AI scoring + tailored resume.</p>
             <textarea value={customJD} onChange={(e) => setCustomJD(e.target.value)}
               placeholder="Paste job description here…" rows={3}
               className="w-full border rounded text-xs p-2 resize-none" />

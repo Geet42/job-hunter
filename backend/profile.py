@@ -97,16 +97,26 @@ TARGET_ROLES = [
     "Junior Software Engineer",
 ]
 
-# Search queries — focused on intern / entry-level / graduate roles only
+# Search queries — broad enough to match Reed/Greenhouse results, specific enough to target roles
+# Ireland's job market uses terms like "junior", "graduate", "developer" more than "intern"
 SEARCH_QUERIES = [
-    {"keyword": "software engineer intern", "location": "Dublin, Ireland"},
-    {"keyword": "software engineer graduate", "location": "Dublin, Ireland"},
-    {"keyword": "java developer entry level", "location": "Dublin, Ireland"},
-    {"keyword": "backend engineer intern", "location": "Dublin, Ireland"},
-    {"keyword": "AI engineer intern", "location": "Dublin, Ireland"},
-    {"keyword": "machine learning intern", "location": "Ireland"},
-    {"keyword": "graduate software engineer", "location": "Ireland"},
-    {"keyword": "junior software engineer", "location": "Dublin, Ireland"},
+    # Core software engineering
+    {"keyword": "software engineer",         "location": "Ireland"},
+    {"keyword": "junior software engineer",  "location": "Ireland"},
+    {"keyword": "graduate software engineer","location": "Ireland"},
+    # Java / Spring Boot (Geet's primary stack)
+    {"keyword": "java developer",            "location": "Ireland"},
+    {"keyword": "junior java developer",     "location": "Ireland"},
+    # Python / AI / ML
+    {"keyword": "python developer",          "location": "Ireland"},
+    {"keyword": "machine learning engineer", "location": "Ireland"},
+    {"keyword": "AI engineer",               "location": "Ireland"},
+    # Backend / Full Stack
+    {"keyword": "backend developer",         "location": "Ireland"},
+    {"keyword": "full stack developer",      "location": "Ireland"},
+    # Graduate / Intern specifically
+    {"keyword": "graduate engineer",         "location": "Ireland"},
+    {"keyword": "software intern",           "location": "Ireland"},
 ]
 
 # Scoring weights (must sum to 100)

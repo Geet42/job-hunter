@@ -17,7 +17,7 @@ import os
 from scraper import scrape_all_sources, run_all_search_queries
 from scorer import score_jobs_batch, score_job
 from tailor import tailor_resume, generate_cover_letter, analyze_gaps
-from db import upsert_jobs, get_jobs, get_job, update_job_status, get_already_scored_urls, delete_job
+from db import upsert_jobs, get_jobs, get_job, update_job_status, get_already_scored_urls, delete_job, purge_bad_jobs
 
 app = FastAPI(title="Job Hunter API", version="1.0.0")
 
@@ -286,6 +286,12 @@ def _full_scrape_and_score():
             scored = score_jobs_batch(new_jobs)
             upsert_jobs(scored)
             print(f"[main] Scored and saved {len(scored)} jobs")
+
+        # Post-search DB purge — removes any bad/senior/non-engineering jobs
+        # that slipped through (old DB rows, scoring edge cases, etc.)
+        purged = purge_bad_jobs()
+        if purged:
+            print(f"[main] DB purge removed {purged} bad jobs")
 
         _scrape_status = {
             "running": False,
