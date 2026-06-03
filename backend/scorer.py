@@ -68,7 +68,11 @@ NOT a match: sales, account executive, marketing, HR, finance, legal, customer s
 
 SCORE_PROMPT_SINGLE = """You are a technical recruiter and ATS expert. Analyze the match between the candidate and job. Respond ONLY with valid JSON — no markdown, no explanation.
 
-STEP 1 — ROLE CHECK: If the job is NOT software engineering / AI / ML / backend / frontend / developer (e.g. sales, account executive, marketing, HR, finance, legal, business development, customer success, product management) → return {{"score":1,"verdict":"Skip","verdict_reason":"Not a software engineering role","matches":[],"gaps":[],"red_flags":["Not a technical role"],"ats_keywords_present":[],"ats_keywords_missing":[],"required_skills_score":0,"preferred_skills_score":0,"cultural_fit_score":0,"ats_score":0,"apply_recommendation":"No"}}
+STEP 1 — ROLE CHECK (MANDATORY — check job title first):
+The job title is: "{title}"
+If the job title contains ANY of these words/phrases → IMMEDIATELY return the Skip JSON below, regardless of company or description:
+  sales, account executive, account manager, account development, business development, marketing, recruiter, recruitment, HR, human resources, legal, finance, financial, operations manager, program manager, product manager, customer success, customer support, regulatory, compliance, analyst (non-technical), consultant (non-technical), representative, coordinator, administrator, director (non-engineering)
+Non-engineering role Skip JSON: {{"score":1,"verdict":"Skip","verdict_reason":"Not a software engineering role — title '{title}' is non-technical","matches":[],"gaps":[],"red_flags":["Not a technical role"],"ats_keywords_present":[],"ats_keywords_missing":[],"required_skills_score":0,"preferred_skills_score":0,"cultural_fit_score":0,"ats_score":0,"apply_recommendation":"No"}}
 
 STEP 2 — WEIGHTED SCORING (only for engineering roles):
 - Required Skills/Experience (50 pts): % of hard JD requirements met by candidate
@@ -166,10 +170,35 @@ def _score_single_with_claude(job: dict) -> dict:
     return result
 
 
+_NON_ENGINEERING_TITLE_WORDS = [
+    "account executive", "account manager", "account development",
+    "business development", "sales", "marketing", "recruiter", "recruitment",
+    "human resources", " hr ", "legal", "finance", "financial",
+    "operations manager", "program manager", "product manager",
+    "customer success", "customer support", "regulatory", "compliance",
+    "representative", "coordinator", "administrator",
+]
+
+def _is_non_engineering(job: dict) -> bool:
+    title = (job.get("title") or "").lower()
+    return any(phrase in title for phrase in _NON_ENGINEERING_TITLE_WORDS)
+
+
 def score_job(job: dict) -> dict:
     """Score a single job. Uses Ollama (free) → Claude Haiku fallback."""
     if not _desc(job) or len(_desc(job)) < 50:
         return {**job, "ai_score": None, "ai_error": "No description"}
+
+    # Hard skip non-engineering roles without spending any AI tokens
+    if _is_non_engineering(job):
+        return {**job,
+                "ai_score": 1, "ai_verdict": "Skip",
+                "ai_verdict_reason": f"Non-engineering role: {job.get('title','')}",
+                "ai_matches": [], "ai_gaps": [], "ai_red_flags": ["Not a technical role"],
+                "ai_keywords_present": [], "ai_keywords_missing": [],
+                "ai_apply": "No",
+                "ai_breakdown": {"required_skills": 0, "preferred_skills": 0, "cultural_fit": 0, "ats_coverage": 0},
+                "ai_engine": "pre-filter", "ai_error": None}
 
     try:
         if _ollama_available():
