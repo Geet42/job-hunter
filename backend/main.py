@@ -205,6 +205,22 @@ def cover_letter_endpoint(req: CoverLetterRequest):
     return {"cover_letter": text}
 
 
+@app.post("/score/rescore")
+def rescore_all():
+    """Re-score all jobs in the DB that have no AI score yet."""
+    import threading
+    def _do_rescore():
+        db = get_client()
+        unscored = db.table("jobs").select("*").is_("ai_score", "null").execute().data or []
+        print(f"[rescore] {len(unscored)} unscored jobs found")
+        if unscored:
+            scored = score_jobs_batch(unscored)
+            upsert_jobs(scored)
+            print(f"[rescore] Scored {len(scored)} jobs")
+    threading.Thread(target=_do_rescore, daemon=True).start()
+    return {"message": "Re-scoring started", "status": "started"}
+
+
 @app.post("/score")
 def score_single(req: TailorRequest):
     """Score a custom job description (paste any JD to get a score)."""

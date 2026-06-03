@@ -70,7 +70,7 @@ SCORE_PROMPT_SINGLE = """You are a technical recruiter and ATS expert. Analyze t
 
 STEP 1 — ROLE CHECK (MANDATORY — check job title first):
 The job title is: "{title}"
-If the job title contains ANY of these words/phrases → IMMEDIATELY return the Skip JSON below, regardless of company or description:
+If the job title contains ANY of these words/phrases -> IMMEDIATELY return the Skip JSON below, regardless of company or description:
   sales, account executive, account manager, account development, business development, marketing, recruiter, recruitment, HR, human resources, legal, finance, financial, operations manager, program manager, product manager, customer success, customer support, regulatory, compliance, analyst (non-technical), consultant (non-technical), representative, coordinator, administrator, director (non-engineering)
 Non-engineering role Skip JSON: {{"score":1,"verdict":"Skip","verdict_reason":"Not a software engineering role — title '{title}' is non-technical","matches":[],"gaps":[],"red_flags":["Not a technical role"],"ats_keywords_present":[],"ats_keywords_missing":[],"required_skills_score":0,"preferred_skills_score":0,"cultural_fit_score":0,"ats_score":0,"apply_recommendation":"No"}}
 
@@ -79,7 +79,7 @@ STEP 2 — WEIGHTED SCORING (only for engineering roles):
 - Preferred/Desirable Skills (25 pts): % of preferred JD skills met
 - Cultural/Soft Fit (10 pts): teamwork, CI/CD discipline, collaboration signals
 - ATS Keyword Coverage (15 pts): % of JD keywords present in candidate profile
-Score out of 100 → divide by 10 for final score. Be precise, do not inflate.
+Score out of 100 -> divide by 10 for final score. Be precise, do not inflate.
 
 STEP 3 — VERDICT:
 8-10 = Strong Apply, 6-7 = Apply, 4-5 = Maybe, 1-3 = Skip
@@ -185,7 +185,7 @@ def _is_non_engineering(job: dict) -> bool:
 
 
 def score_job(job: dict) -> dict:
-    """Score a single job. Uses Ollama (free) → Claude Haiku fallback."""
+    """Score a single job. Uses Ollama (free) -> Claude Haiku fallback."""
     if not _desc(job) or len(_desc(job)) < 50:
         return {**job, "ai_score": None, "ai_error": "No description"}
 
@@ -223,7 +223,7 @@ def score_jobs_batch(jobs: list[dict]) -> list[dict]:
     Batching was removed because zip(batch, analyses) silently mismatches
     jobs when Claude returns analyses out of order or short-counts.
 
-    Priority: Ollama (free/local) → Claude Haiku (cheap fallback)
+    Priority: Ollama (free/local) -> Claude Haiku (cheap fallback)
     """
     scorable = [j for j in jobs if len(_desc(j)) >= 50]
     no_desc  = [{**j, "ai_score": None, "ai_error": "No description"}
@@ -240,7 +240,7 @@ def score_jobs_batch(jobs: list[dict]) -> list[dict]:
             result = score_job(job)
             scored.append(result)
             engine = "ollama" if use_ollama else "claude-haiku"
-            print(f"[scorer] {i+1}/{len(scorable)} scored: {job.get('title','?')[:40]} → {result.get('ai_score')}/10 ({engine})")
+            print(f"[scorer] {i+1}/{len(scorable)} scored: {job.get('title','?')[:40]} -> {result.get('ai_score')}/10 ({engine})")
         except Exception as e:
             print(f"[scorer] Failed to score '{job.get('title','?')}': {e}")
             scored.append({**job, "ai_score": None, "ai_error": str(e)})
