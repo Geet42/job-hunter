@@ -25,11 +25,13 @@ from profile import SEARCH_QUERIES
 
 
 def _strip_html(text: str) -> str:
-    """Remove HTML tags and clean up whitespace."""
+    """Remove HTML tags, decode entities, and clean up whitespace."""
     if not text:
         return ""
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = re.sub(r"&[a-z]+;", " ", text)
+    import html as _html
+    text = _html.unescape(text)                     # &lt; → <, &amp; → &, etc.
+    text = re.sub(r"<[^>]+>", " ", text)            # strip remaining <tags>
+    text = re.sub(r"&[a-z#0-9]+;", " ", text)       # any leftover entities
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
@@ -71,7 +73,6 @@ _TOO_SENIOR = [
 # ── Description-level experience requirement filter ──────────
 
 # Matches: "3+ years", "4 years of experience", "minimum 5 years", "at least 3 years"
-# etc. — flags roles explicitly requiring 3+ years professional experience
 _SENIOR_EXP_RE = re.compile(
     r'\b([3-9]|1[0-9])\+?\s*years?\s*(of\s*)?(professional\s*)?(industry\s*)?(work\s*)?(software\s*)?'
     r'(engineering\s*)?(development\s*)?(experience|exp)\b'
@@ -81,11 +82,17 @@ _SENIOR_EXP_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Stripe-style: "2-12+ years ... does not include internships"
+# Range patterns like "2-12+ years", "2-10+ years", "3-5 years"
+# Reject if the upper bound is >= 5 (clearly not entry-level)
+_EXP_RANGE_RE = re.compile(
+    r'\b\d+\s*[-–]\s*(\d+)\+?\s*years?\b',
+    re.IGNORECASE,
+)
+
+# Stripe-style: "does not include internships/co-op"
 _EXCL_INTERN_RE = re.compile(
-    r'\b2\+?\s*[-–]\s*\d+\+?\s*years?\b.*?\bdoes\s*not\s*include\s*(internship|co.?op)\b'
-    r'|\bdoes\s*not\s*include\s*(internship|co.?op)\b',
-    re.IGNORECASE | re.DOTALL,
+    r'\bdoes\s*not\s*include\s*(internship|co.?op)\b',
+    re.IGNORECASE,
 )
 
 # Entry-level positive signals — if present, keep regardless of year count
@@ -119,13 +126,20 @@ def _is_engineering_role(job: dict) -> bool:
             print(f"[scraper] Filtered (too senior title): {job.get('title')}")
             return False
 
-    # Layer 3 — description says 3+ years required (skip if entry-level signals present)
+    # Layer 3a — description says 3+ years required
     if _SENIOR_EXP_RE.search(desc) and not _ENTRY_SIGNALS_RE.search(title + " " + desc[:500]):
         print(f"[scraper] Filtered (3+ yrs required): {job.get('title')}")
         return False
 
-    # Stripe pattern: requires 2+ years EXCLUDING internships
-    if _EXCL_INTERN_RE.search(desc):
+    # Layer 3b — range pattern like "2-12+ years", "2-10+ years": reject if upper bound >= 5
+    for m in _EXP_RANGE_RE.finditer(desc):
+        upper = int(m.group(1))
+        if upper >= 5 and not _ENTRY_SIGNALS_RE.search(title + " " + desc[:500]):
+            print(f"[scraper] Filtered (range {m.group(0)}): {job.get('title')}")
+            return False
+
+    # Layer 3c — explicitly excludes internship/co-op experience counting
+    if _EXCL_INTERN_RE.search(desc) and not _ENTRY_SIGNALS_RE.search(title):
         print(f"[scraper] Filtered (excludes intern exp): {job.get('title')}")
         return False
 
