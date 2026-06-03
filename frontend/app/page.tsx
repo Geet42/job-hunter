@@ -393,9 +393,9 @@ export default function Home() {
               </div>
             )}
             {jobs.map((job) => (
-              <button key={job.id}
+              <div key={job.id} role="button" tabIndex={0}
                 onClick={() => { setSelected(job); setTab("analysis"); setResumeResult(null); setCoverLetter(""); setGenError(""); setGapSuggestions([]); }}
-                className={`w-full text-left p-3 border-b hover:bg-gray-50 transition-colors ${
+                className={`w-full text-left p-3 border-b hover:bg-gray-50 transition-colors cursor-pointer ${
                   selected?.id === job.id ? "bg-indigo-50 border-l-4 border-l-indigo-500" : ""
                 }`}>
                 <div className="flex items-start justify-between gap-2">
@@ -429,7 +429,7 @@ export default function Home() {
                     </button>
                   </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
 
