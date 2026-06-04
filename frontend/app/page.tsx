@@ -137,6 +137,9 @@ function sourceInfo(raw: string): { label: string; color: string } {
   if (s.includes("workday"))          return { label: "Career Site", color: "bg-cyan-100 text-cyan-700" };
   if (s.includes("workable"))         return { label: "Career Site", color: "bg-teal-100 text-teal-700" };
   if (s.includes("greenhouse") || s.includes("company career")) return { label: "Career Site", color: "bg-gray-100 text-gray-600" };
+  if (s.includes("totaljobs")) return { label: "TotalJobs",  color: "bg-amber-100 text-amber-700" };
+  if (s.includes("monster"))   return { label: "Monster",    color: "bg-violet-100 text-violet-700" };
+  if (s.includes("jooble"))    return { label: "Jooble",     color: "bg-lime-100 text-lime-700" };
   if (s.includes("google jobs") || s.includes("via google")) return { label: "Google Jobs", color: "bg-yellow-100 text-yellow-700" };
   return { label: raw || "Job Board", color: "bg-gray-100 text-gray-500" };
 }

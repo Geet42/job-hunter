@@ -208,6 +208,7 @@ RAPIDAPI_KEY   = os.environ.get("RAPIDAPI_KEY", "")
 ADZUNA_APP_ID  = os.environ.get("ADZUNA_APP_ID", "")
 ADZUNA_API_KEY = os.environ.get("ADZUNA_API_KEY", "")
 REED_API_KEY   = os.environ.get("REED_API_KEY", "")
+JOOBLE_API_KEY = os.environ.get("JOOBLE_API_KEY", "")
 
 # Ireland-based companies on Greenhouse ATS — public API, no auth needed
 # These companies have significant Dublin/Ireland engineering offices
@@ -409,6 +410,57 @@ def _adzuna_salary(job):
 
 
 # ─── 3. Reed API ──────────────────────────────────────────────
+
+def _jooble_source_label(src: str) -> str:
+    """Map Jooble's originating-board domain to a friendly source label."""
+    s = (src or "").lower()
+    if "indeed" in s:      return "Indeed"
+    if "glassdoor" in s:   return "Glassdoor"
+    if "irishjobs" in s:   return "IrishJobs"
+    if "jobs.ie" in s:     return "Jobs.ie"
+    if "linkedin" in s:    return "LinkedIn"
+    if "totaljobs" in s:   return "TotalJobs"
+    if "monster" in s:     return "Monster"
+    # Otherwise show the originating board name via Jooble
+    return f"Jooble ({src})" if src else "Jooble"
+
+
+def scrape_jooble(keyword: str, location: str = "Ireland", max_results: int = 30) -> list[dict]:
+    """
+    Jooble aggregator API — covers Indeed, IrishJobs, Glassdoor-syndicated,
+    and many other Ireland job boards in one call. FREE but limited to 500
+    requests total, so we make ONE request per keyword (no pagination).
+    """
+    if not JOOBLE_API_KEY:
+        return []
+    results = []
+    try:
+        resp = httpx.post(
+            f"https://jooble.org/api/{JOOBLE_API_KEY}",
+            json={"keywords": keyword, "location": location},
+            headers={"Content-type": "application/json"},
+            timeout=20,
+        )
+        if resp.status_code != 200:
+            print(f"[scraper] Jooble {resp.status_code} for '{keyword}'")
+            return []
+        for job in (resp.json().get("jobs") or [])[:max_results]:
+            results.append({
+                "source":      _jooble_source_label(job.get("source") or ""),
+                "title":       _strip_html(job.get("title") or ""),
+                "company":     _strip_html(job.get("company") or ""),
+                "location":    _strip_html(job.get("location") or location),
+                "description": _strip_html(job.get("snippet") or ""),
+                "url":         job.get("link") or "",
+                "salary":      job.get("salary") or None,
+                "job_type":    job.get("type") or None,
+                "posted_date": (job.get("updated") or "")[:10] or None,  # ISO date part
+            })
+    except Exception as e:
+        print(f"[scraper] Jooble failed for '{keyword}': {e}")
+    print(f"[scraper] Jooble -> {len(results)} jobs for '{keyword}'")
+    return results
+
 
 def scrape_reed(keyword: str, location: str = "Ireland", max_results: int = 20) -> list[dict]:
     """Reed free API — UK/Ireland jobs, no rate limit."""
@@ -1149,6 +1201,7 @@ def scrape_all_sources(
         "workable":         scrape_workable,
         "workday":          scrape_workday,
         "linkedin":         scrape_linkedin,
+        "jooble":           scrape_jooble,    # aggregates Indeed/IrishJobs/Glassdoor
         "indeed":           scrape_indeed,    # blocked by Indeed
         "jobsie":           scrape_jobsie,    # site blocks scraping
         "irishjobs":        scrape_irishjobs, # site blocks scraping
@@ -1204,6 +1257,26 @@ def run_all_search_queries(max_per_source: int = 10) -> list[dict]:
                 all_jobs.append(job)
                 added += 1
         return added
+
+    # ── Jooble: aggregator covering Indeed, IrishJobs, Glassdoor & more ──────────
+    # FREE but capped at 500 requests total, so use a SMALL set of broad keywords
+    # (one request each). Jooble already aggregates many boards, so few queries
+    # give wide coverage. ~6 requests per full search.
+    JOOBLE_QUERIES = [
+        "software engineer", "java developer", "python developer",
+        "graduate software engineer", "machine learning engineer", "full stack developer",
+    ]
+    if JOOBLE_API_KEY:
+        print(f"[scraper] -- Jooble (Indeed/IrishJobs/Glassdoor aggregator): {len(JOOBLE_QUERIES)} queries --")
+        for kw in JOOBLE_QUERIES:
+            try:
+                n = _add(scrape_jooble(kw, "Ireland", 40))
+                if n > 0:
+                    print(f"[scraper] Jooble '{kw}' -> {n} new")
+            except Exception as e:
+                print(f"[scraper] Jooble '{kw}' failed: {e}")
+    else:
+        print("[scraper] -- Jooble: no API key (set JOOBLE_API_KEY in .env) --")
 
     # ── LinkedIn: public guest API — real LinkedIn Ireland jobs, no login needed ──
     # LinkedIn exposes job listings to non-logged-in visitors via a guest API.
