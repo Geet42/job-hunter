@@ -958,37 +958,24 @@ IRELAND_WORKABLE_SLUGS = [
 #   DocuSign, NCR, State Street, Northern Trust, BNY Mellon, JPMorgan
 #
 IRELAND_WORKDAY_TENANTS = [
-    # (tenant, wd_num, jobsite)
-    ("oracle",           1, "External"),
-    ("salesforce",       1, "Salesforce"),
-    ("servicenow",       1, "External"),
-    ("cisco",            5, "External"),
-    ("vmware",           1, "External"),
-    ("linkedin",         1, "External"),
-    ("workday",          5, "External"),
-    ("zendesk",          1, "External"),
-    ("autodesk",         1, "External"),
-    ("fidelityinvestments", 1, "External"),
-    ("mastercard",       1, "External"),
-    ("visa",             1, "visa_External"),
-    ("jpmc",             5, "External"),
-    ("bnymellon",        1, "External"),
-    ("statestreet",      1, "External"),
-    ("northerntrust",    5, "External"),
-    ("accenture",        3, "Accenture"),
-    ("citrix",           1, "External"),
-    ("docusign",         1, "External"),
-    ("adp",              5, "External"),
-    ("ncr",              1, "External"),
-    ("expedia",          5, "External"),
-    ("hubspot",          1, "External"),
-    ("airbnb",           5, "External"),
-    ("twilio",           1, "External"),
-    ("dynatrace",        1, "External"),
-    ("fortinet",         1, "External"),
-    ("juniperjobs",      1, "External"),
-    ("ibm",              3, "External"),
-    ("dell",             1, "External"),
+    # (tenant, "wdN", jobsite) — VERIFIED working public endpoints (probed live).
+    # The jobsite path varies per company; these were confirmed to return jobs.
+    ("mastercard",  "wd1",  "CorporateCareers"),
+    ("salesforce",  "wd12", "External_Career_Site"),
+    ("medtronic",   "wd1",  "medtronicCareers"),
+    ("stryker",     "wd1",  "strykerCareers"),
+    ("autodesk",    "wd1",  "Ext"),
+    ("nvidia",      "wd5",  "NVIDIAExternalCareerSite"),
+    ("workday",     "wd5",  "Workday"),
+    ("statestreet", "wd1",  "Global"),
+    ("comcast",     "wd5",  "comcast_Careers"),
+    ("tmobile",     "wd1",  "External"),
+    ("cisco",       "wd5",  "cisco_Careers"),
+    ("hp",          "wd5",  "ExternalCareerSite"),
+    ("novartis",    "wd3",  "novartis_Careers"),
+    ("pfizer",      "wd1",  "pfizerCareers"),
+    ("abbott",      "wd5",  "abbottCareers"),
+    ("edwards",     "wd5",  "edwardsCareers"),
 ]
 
 
@@ -1055,32 +1042,39 @@ def scrape_workday(keyword: str, location: str = "ireland", max_results: int = 3
 
     def _fetch_tenant(tenant, wd_num, jobsite):
         """Fetch one company's Workday jobs, return matching list."""
-        base_url = f"https://{tenant}.wd{wd_num}.myworkdayjobs.com"
+        # wd_num may be int (legacy) or str like "wd1"
+        wd = wd_num if isinstance(wd_num, str) else f"wd{wd_num}"
+        base_url = f"https://{tenant}.{wd}.myworkdayjobs.com"
         endpoint  = f"{base_url}/wday/cxs/{tenant}/{jobsite}/jobs"
+        hdr = {"User-Agent": "Mozilla/5.0", "Content-Type": "application/json", "Accept": "application/json"}
+        # Workday caps limit at 20 per page — paginate up to 3 pages (60 results).
+        postings = []
+        for offset in (0, 20, 40):
+            try:
+                resp = httpx.post(
+                    endpoint,
+                    json={"appliedFacets": {}, "limit": 20, "offset": offset, "searchText": keyword},
+                    headers=hdr,
+                    timeout=10,
+                )
+                if resp.status_code not in (200, 201):
+                    break
+                page = resp.json().get("jobPostings") or []
+                if not page:
+                    break
+                postings.extend(page)
+                if len(page) < 20:
+                    break
+            except Exception:
+                break
         try:
-            resp = httpx.post(
-                endpoint,
-                json={"appliedFacets": {}, "limit": 50, "offset": 0, "searchText": keyword},
-                headers={
-                    "User-Agent": "Mozilla/5.0",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
-                timeout=10,
-            )
-            if resp.status_code not in (200, 201):
-                return []
-            data = resp.json()
-            postings = data.get("jobPostings") or []
             found = []
             for job in postings:
                 loc_text = (job.get("locationsText") or "").lower()
-                remote_text = (job.get("additionalLocations") or "")
-                loc_ok = (
-                    any(t in loc_text for t in ireland_terms) or
-                    "worldwide" in loc_text or
-                    "anywhere" in loc_text
-                )
+                # Must explicitly mention Ireland/Irish city. "Remote" alone is NOT
+                # enough — it pulls in Vietnam/Canada/India remote roles.
+                ireland_only = {"ireland", "dublin", "cork", "limerick", "galway"}
+                loc_ok = any(t in loc_text for t in ireland_only)
                 if not loc_ok:
                     continue
                 ext_path = job.get("externalPath") or ""
@@ -1114,7 +1108,7 @@ def scrape_workday(keyword: str, location: str = "ireland", max_results: int = 3
         except Exception:
             return []
 
-    with ThreadPoolExecutor(max_workers=6) as pool:
+    with ThreadPoolExecutor(max_workers=8) as pool:
         futures = {
             pool.submit(_fetch_tenant, tenant, wd_num, jobsite): (tenant, jobsite)
             for tenant, wd_num, jobsite in IRELAND_WORKDAY_TENANTS
@@ -1306,9 +1300,18 @@ def run_all_search_queries(max_per_source: int = 10) -> list[dict]:
             except Exception as e:
                 print(f"[scraper] Greenhouse thread failed: {e}")
 
-    # NOTE: Workday ATS returns 422 errors for all tested tenants — their API now requires
-    # CSRF tokens or session cookies. Removed from active search flow until a working
-    # approach is found. The scrape_workday() function remains for future use.
+    # ── Workday ATS: direct company career sites (Mastercard, Cisco, State St...) ─
+    # Free public CXS API — verified working per-tenant endpoints. One call per
+    # keyword covers all tenants in parallel inside scrape_workday().
+    print(f"[scraper] -- Workday ATS ({len(IRELAND_WORKDAY_TENANTS)} companies) --")
+    for query in SEARCH_QUERIES:
+        try:
+            jobs = scrape_workday(query["keyword"], "ireland", max_per_source * 3)
+            n = _add(jobs)
+            if n > 0:
+                print(f"[scraper] Workday '{query['keyword']}' -> {n} new")
+        except Exception as e:
+            print(f"[scraper] Workday '{query['keyword']}' failed: {e}")
 
     # ── Adzuna: sequential, GB endpoint (covers UK+Ireland jobs) ─────────────────
     # Adzuna does not support 'ie' but GB endpoint covers Northern Ireland and

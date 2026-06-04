@@ -15,6 +15,43 @@ from profile import COVER_LETTER_PROMPT_TEMPLATE
 
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
+
+def _parse_llm_json(raw: str):
+    """Parse JSON from a Claude response, tolerating markdown fences and
+    truncation (max_tokens cut the response off mid-structure)."""
+    raw = raw.strip()
+    # Strip markdown fences
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.rsplit("```", 1)[0]
+    raw = raw.strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        # Truncated mid-string/array/object — trim to last complete element,
+        # then close any open brackets so it parses.
+        salvage = raw
+        # Drop a dangling unterminated string by cutting at the last closing quote
+        # that is followed by , ] or } (a complete value boundary).
+        m = list(re.finditer(r'"(?:[^"\\]|\\.)*"\s*(?=[,\]}])', salvage))
+        if m:
+            salvage = salvage[: m[-1].end()]
+        # Remove trailing comma/whitespace
+        salvage = re.sub(r"[,\s]+$", "", salvage)
+        open_b = salvage.count("{") - salvage.count("}")
+        open_s = salvage.count("[") - salvage.count("]")
+        salvage += ("}" * max(open_b, 0)) if open_b > open_s else ""
+        # Close in correct nesting-agnostic order: brackets then braces is wrong
+        # for nested; rebuild by closing inner-most last. Simple heuristic:
+        salvage2 = salvage + ("]" * max(open_s, 0)) + ("}" * max(open_b, 0))
+        try:
+            return json.loads(salvage2)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"LLM JSON truncated and unrecoverable: {e}. Try again.") from e
+
+
 DOCX_GEN = os.path.join(os.path.dirname(__file__), "docx_gen", "generate.js")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -200,18 +237,11 @@ def analyze_gaps(job_description: str, job_title: str = "", company: str = "") -
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=2000,
+        max_tokens=3000,
         messages=[{"role": "user", "content": prompt}],
     )
 
-    raw = message.content[0].text.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.rsplit("```", 1)[0]
-
-    suggestions = json.loads(raw)
+    suggestions = _parse_llm_json(message.content[0].text)
     if isinstance(suggestions, dict):
         suggestions = [suggestions]
     return suggestions
@@ -244,26 +274,7 @@ def tailor_resume(job_description: str, job_title: str = "", company: str = "",
         messages=[{"role": "user", "content": prompt}],
     )
 
-    raw = message.content[0].text.strip()
-    # Strip markdown fences if present
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-        raw = raw.rsplit("```", 1)[0]
-
-    # Handle truncated JSON (max_tokens hit mid-response) — close open structures
-    try:
-        resume_data = json.loads(raw)
-    except json.JSONDecodeError:
-        # Count unclosed brackets/braces and close them
-        open_b = raw.count("{") - raw.count("}")
-        open_s = raw.count("[") - raw.count("]")
-        patch = ("]" * max(open_s, 0)) + ("}" * max(open_b, 0))
-        try:
-            resume_data = json.loads(raw + patch)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Resume JSON truncated and unrecoverable: {e}. Try again.") from e
+    resume_data = _parse_llm_json(message.content[0].text)
 
     # Strip **bold** markdown from all text fields — the DOCX generator
     # handles bolding via bold_terms[], so literal asterisks must be removed.
