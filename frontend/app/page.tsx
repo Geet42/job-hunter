@@ -207,7 +207,11 @@ export default function Home() {
       const aR = isRecent(a.posted_date) ? 1 : 0;
       const bR = isRecent(b.posted_date) ? 1 : 0;
       if (aR !== bR) return bR - aR;
-      // Then by score descending
+      // Then newest posted_date first (jobs with no date go last)
+      const aT = a.posted_date ? (parseDate(a.posted_date)?.getTime() ?? 0) : 0;
+      const bT = b.posted_date ? (parseDate(b.posted_date)?.getTime() ?? 0) : 0;
+      if (bT !== aT) return bT - aT;
+      // Tiebreak by score
       return (b.ai_score ?? 0) - (a.ai_score ?? 0);
     });
 
