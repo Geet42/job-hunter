@@ -570,6 +570,8 @@ def scrape_linkedin(keyword: str, location: str = "Ireland", max_results: int = 
             titles   = re.findall(r'<h3[^>]*class="[^"]*base-search-card__title[^"]*"[^>]*>\s*(.*?)\s*</h3>', html, re.DOTALL)
             companies = re.findall(r'<h4[^>]*class="[^"]*base-search-card__subtitle[^"]*"[^>]*>.*?<a[^>]*>(.*?)</a>', html, re.DOTALL)
             locations = re.findall(r'<span[^>]*class="[^"]*job-search-card__location[^"]*"[^>]*>\s*(.*?)\s*</span>', html)
+            # Posted dates from <time datetime="YYYY-MM-DD"> elements (one per card)
+            dates    = re.findall(r'<time[^>]*datetime="([^"]*)"', html)
 
             if not job_ids:
                 break
@@ -581,6 +583,7 @@ def scrape_linkedin(keyword: str, location: str = "Ireland", max_results: int = 
                 title    = _strip_html(titles[i])   if i < len(titles)    else keyword
                 company  = _strip_html(companies[i]) if i < len(companies) else ""
                 loc_str  = _strip_html(locations[i]) if i < len(locations) else location
+                posted   = dates[i] if i < len(dates) else None
                 job_url  = f"https://www.linkedin.com/jobs/view/{jid}"
 
                 # Fetch full description from detail endpoint
@@ -610,7 +613,7 @@ def scrape_linkedin(keyword: str, location: str = "Ireland", max_results: int = 
                     "url":         job_url,
                     "salary":      None,
                     "job_type":    None,
-                    "posted_date": None,
+                    "posted_date": posted,
                 })
 
             time.sleep(0.8)  # be polite, avoid 429
