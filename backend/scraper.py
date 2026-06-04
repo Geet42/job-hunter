@@ -84,19 +84,20 @@ _NON_ENGINEERING = [
     "junior civil", "junior electrical",
 ]
 
-# Titles containing these -> too senior for entry-level candidate
-_TOO_SENIOR = [
-    "staff engineer", "staff software", "staff backend", "staff frontend",
-    "principal engineer", "principal software", "principal developer",
-    "senior engineer", "senior software", "senior backend", "senior frontend",
-    "senior developer", "senior java", "senior python", "senior full stack",
-    "senior data", "senior ml", "senior ai",
-    "lead engineer", "lead developer", "lead software",
-    "engineering manager", "director of engineering", "vp of engineering",
-    "head of engineering", "head of software", "chief technology",
-    "architect ", "solution architect", "enterprise architect",
-    "tech lead", "technical lead",
-]
+# Titles matching this regex -> too senior for an entry-level candidate.
+# Word-boundary based so it catches "Principal Oracle Engineer", "Lead Data
+# Engineer", "Manager, Software Engineering", "Software Engineer II/III", etc.
+_SENIOR_TITLE_RE = re.compile(
+    r'\b('
+    r'senior|sr\.?|staff|principal|lead|director|head\s+of|'
+    r'vp|svp|evp|vice\s+president|chief|cto|ceo|'
+    r'manager|managing|architect|'
+    r'ii|iii|iv|vi+'          # roman-numeral levels (II, III, IV, VI...)
+    r')\b'
+    r'|\bengineer\s+[2-9]\b'  # "Engineer 2", "Engineer 3"
+    r'|\blevel\s+[2-9]\b',
+    re.IGNORECASE,
+)
 
 # ── Description-level experience requirement filter ──────────
 
@@ -149,16 +150,16 @@ def _is_engineering_role(job: dict) -> bool:
             print(f"[scraper] Filtered (non-eng title): {job.get('title')}")
             return False
 
-    # Layer 2 — too-senior title
-    for phrase in _TOO_SENIOR:
-        if phrase in title:
-            print(f"[scraper] Filtered (too senior title): {job.get('title')}")
-            return False
-
     # Entry-level override: only from the TITLE — never from description,
     # because descriptions often say "if you're an intern, do NOT apply here"
     # which would falsely look like a positive entry-level signal.
     title_is_entry_level = bool(_ENTRY_SIGNALS_RE.search(title))
+
+    # Layer 2 — too-senior title (skip if the title itself is clearly entry-level,
+    # e.g. "Graduate Engineer" should never be rejected for a level word).
+    if not title_is_entry_level and _SENIOR_TITLE_RE.search(title):
+        print(f"[scraper] Filtered (too senior title): {job.get('title')}")
+        return False
 
     # Layer 3a — description says 3+ years required
     if _SENIOR_EXP_RE.search(desc) and not title_is_entry_level:

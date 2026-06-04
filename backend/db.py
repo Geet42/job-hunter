@@ -135,12 +135,19 @@ def purge_bad_jobs() -> int:
         "graduate estimator", "junior structural", "junior mechanical",
         "junior civil", "junior electrical",
     ]
-    senior_words = [
-        "staff engineer", "principal engineer", "senior engineer", "senior developer",
-        "senior software", "lead engineer", "lead developer",
-        "engineering manager", "director of", "head of engineering",
-        "vp of", "chief technology",
-    ]
+    # Word-boundary senior-title regex (mirrors scraper._SENIOR_TITLE_RE) — catches
+    # "Principal Oracle Engineer", "Lead Data Engineer", "Manager,", "Engineer II/III", etc.
+    senior_title_re = re.compile(
+        r'\b('
+        r'senior|sr\.?|staff|principal|lead|director|head\s+of|'
+        r'vp|svp|evp|vice\s+president|chief|cto|ceo|'
+        r'manager|managing|architect|'
+        r'ii|iii|iv|vi+'
+        r')\b'
+        r'|\bengineer\s+[2-9]\b'
+        r'|\blevel\s+[2-9]\b',
+        re.IGNORECASE,
+    )
     senior_exp_re = re.compile(
         r'\b([3-9]|1[0-9])\+?\s*years?\b'
         r'|minimum\s*(of\s*)?([3-9]|1[0-9])\s*years?\b'
@@ -165,7 +172,7 @@ def purge_bad_jobs() -> int:
 
         if any(w in title for w in non_eng_words):
             should_delete = True
-        elif any(w in title for w in senior_words):
+        elif not title_entry and senior_title_re.search(title):
             should_delete = True
         elif do_not_apply_re.search(desc[:1000]):
             should_delete = True
