@@ -1028,6 +1028,17 @@ IRELAND_WORKDAY_TENANTS = [
     ("pfizer",      "wd1",  "pfizerCareers"),
     ("abbott",      "wd5",  "abbottCareers"),
     ("edwards",     "wd5",  "edwardsCareers"),
+    ("intel",       "wd1",  "External"),
+    ("gilead",      "wd1",  "gileadCareers"),
+    ("amgen",       "wd1",  "Careers"),
+    ("regeneron",   "wd1",  "Careers"),
+    ("astrazeneca", "wd3",  "Careers"),
+    ("gsk",         "wd5",  "gskCareers"),
+    ("sanofi",      "wd3",  "sanofiCareers"),
+    ("viatris",     "wd5",  "External"),
+    ("thermofisher","wd5",  "thermofisherCareers"),
+    ("agilent",     "wd5",  "agilent_Careers"),
+    ("accenture",   "wd103","accentureCareers"),
 ]
 
 
