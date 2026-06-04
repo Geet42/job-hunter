@@ -240,7 +240,7 @@ def tailor_resume(job_description: str, job_title: str = "", company: str = "",
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=3000,
+        max_tokens=4096,
         messages=[{"role": "user", "content": prompt}],
     )
 
@@ -252,7 +252,18 @@ def tailor_resume(job_description: str, job_title: str = "", company: str = "",
             raw = raw[4:]
         raw = raw.rsplit("```", 1)[0]
 
-    resume_data = json.loads(raw)
+    # Handle truncated JSON (max_tokens hit mid-response) — close open structures
+    try:
+        resume_data = json.loads(raw)
+    except json.JSONDecodeError:
+        # Count unclosed brackets/braces and close them
+        open_b = raw.count("{") - raw.count("}")
+        open_s = raw.count("[") - raw.count("]")
+        patch = ("]" * max(open_s, 0)) + ("}" * max(open_b, 0))
+        try:
+            resume_data = json.loads(raw + patch)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Resume JSON truncated and unrecoverable: {e}. Try again.") from e
 
     # Strip **bold** markdown from all text fields — the DOCX generator
     # handles bolding via bold_terms[], so literal asterisks must be removed.
