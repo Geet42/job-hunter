@@ -134,6 +134,17 @@ def purge_bad_jobs() -> int:
         "qa localization", "medical diagnostic", "localization engineer",
         "graduate estimator", "junior structural", "junior mechanical",
         "junior civil", "junior electrical",
+        # Support / consulting / non-dev technical roles
+        "helpdesk", "help desk", "service desk", "desktop support",
+        "it technician", "it helpdesk", "field technician", "support technician",
+        "technical consultant", "implementation consultant", "implementation specialist",
+        "deal desk", "associate specialist", "technical support",
+        "onboarding specialist", "customer onboarding",
+        # Domain / science / clinical (pharma & medtech career pages)
+        "medical science liaison", "science liaison", "clinical research",
+        "regulatory affairs", "medical affairs", "pharmacovigilance",
+        "supply chain", "logistics", "procurement", "buyer", "warehouse",
+        "operations specialist", "msl ",
     ]
     # Word-boundary senior-title regex (mirrors scraper._SENIOR_TITLE_RE) — catches
     # "Principal Oracle Engineer", "Lead Data Engineer", "Manager,", "Engineer II/III", etc.

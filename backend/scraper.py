@@ -69,6 +69,17 @@ _NON_ENGINEERING = [
     "business analyst", "business intelligence", "data analyst",
     "solution consultant", "scrum master", "technical writer",
     "it support", "systems administrator",
+    # Support / consulting / non-dev technical roles
+    "helpdesk", "help desk", "service desk", "desktop support",
+    "it technician", "it helpdesk", "field technician", "support technician",
+    "technical consultant", "implementation consultant", "implementation specialist",
+    "deal desk", "associate specialist", "technical support",
+    "onboarding specialist", "customer onboarding",
+    # Domain / science / clinical (pharma & medtech career pages)
+    "medical science liaison", "science liaison", "clinical research",
+    "regulatory affairs", "medical affairs", "pharmacovigilance",
+    "supply chain", "logistics", "procurement", "buyer", "warehouse",
+    "operations specialist", "msl ",
     # Non-software engineering disciplines (hardware/physical/domain)
     "civil engineer", "mechanical engineer", "electrical engineer",
     "structural engineer", "highway", "graphic design", "graphic designer",
