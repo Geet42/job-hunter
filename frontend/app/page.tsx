@@ -51,6 +51,46 @@ function safeStr(val: unknown): string {
   return String(val);
 }
 
+/** Safely parse any field that should be a string array (JSONB can come back as string). */
+function safeArr(val: unknown): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(String);
+  if (typeof val === "string") {
+    const t = val.trim();
+    if (t.startsWith("[")) {
+      try { const p = JSON.parse(t); if (Array.isArray(p)) return p.map(String); } catch {}
+    }
+  }
+  return [];
+}
+
+/** Format a posted_date string as a short relative label like "2d ago", "Today", "Jun 3". */
+function formatDate(raw: string | null | undefined): string {
+  if (!raw) return "";
+  try {
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return "";
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffH = diffMs / 3_600_000;
+    const diffD = Math.floor(diffMs / 86_400_000);
+    if (diffH < 2) return "Just now";
+    if (diffH < 24) return `${Math.floor(diffH)}h ago`;
+    if (diffD === 1) return "Yesterday";
+    if (diffD <= 6) return `${diffD}d ago`;
+    return d.toLocaleDateString("en-IE", { day: "numeric", month: "short" });
+  } catch { return ""; }
+}
+
+/** Return true if the job was posted within the last 24 hours. */
+function isRecent(raw: string | null | undefined): boolean {
+  if (!raw) return false;
+  try {
+    const d = new Date(raw);
+    return !isNaN(d.getTime()) && (Date.now() - d.getTime()) < 86_400_000;
+  } catch { return false; }
+}
+
 const VERDICT_COLOR: Record<string, string> = {
   "Strong Apply": "bg-green-100 text-green-800 border-green-300",
   Apply:          "bg-blue-100 text-blue-800 border-blue-300",
@@ -138,13 +178,24 @@ export default function Home() {
   const [customJD, setCustomJD] = useState("");
   const [customScore, setCustomScore] = useState<Partial<Job> | null>(null);
 
-  // ── Derived: apply client-side filters ──────────────────────
-  const jobs = allJobs.filter((j) => {
-    if (matchedOnly && j.ai_verdict && !GOOD_VERDICTS.has(j.ai_verdict)) return false;
-    if (filterStatus && j.status !== filterStatus) return false;
-    if (filterSource && safeStr(j.source) !== filterSource) return false;
-    return true;
-  });
+  // ── Derived: apply client-side filters + sort recent first ──
+  const jobs = allJobs
+    .filter((j) => {
+      // Always hide applied/rejected unless user explicitly filters for them
+      if (!filterStatus && (j.status === "applied" || j.status === "rejected")) return false;
+      if (matchedOnly && j.ai_verdict && !GOOD_VERDICTS.has(j.ai_verdict)) return false;
+      if (filterStatus && j.status !== filterStatus) return false;
+      if (filterSource && safeStr(j.source) !== filterSource) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Past-24h jobs always first
+      const aR = isRecent(a.posted_date) ? 1 : 0;
+      const bR = isRecent(b.posted_date) ? 1 : 0;
+      if (aR !== bR) return bR - aR;
+      // Then by score descending
+      return (b.ai_score ?? 0) - (a.ai_score ?? 0);
+    });
 
   const sources = [...new Set(allJobs.map((j) => safeStr(j.source)).filter(Boolean))];
 
@@ -300,9 +351,26 @@ export default function Home() {
 
   const hideJob = async (jobId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await fetch(`${API}/jobs/${jobId}`, { method: "DELETE" });
-    setAllJobs((prev) => prev.filter((j) => j.id !== jobId));
+    // Set status=rejected instead of deleting — this prevents re-surfacing on next scrape
+    // because upsert_jobs preserves status. Actual DELETE from DB lets the job come back.
+    await fetch(`${API}/jobs/${jobId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "rejected" }),
+    });
+    setAllJobs((prev) => prev.map((j) => j.id === jobId ? { ...j, status: "rejected" } : j));
     if (selected?.id === jobId) setSelected(null);
+  };
+
+  const applyJob = async (jobId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await fetch(`${API}/jobs/${jobId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "applied" }),
+    });
+    setAllJobs((prev) => prev.map((j) => j.id === jobId ? { ...j, status: "applied" } : j));
+    if (selected?.id === jobId) setSelected((s) => s ? { ...s, status: "applied" } : s);
   };
 
   const scoreCustomJD = async () => {
@@ -417,6 +485,7 @@ export default function Home() {
                 className={`w-full text-left p-3 border-b hover:bg-gray-50 transition-colors cursor-pointer ${
                   selected?.id === job.id ? "bg-indigo-50 border-l-4 border-l-indigo-500" : ""
                 }`}>
+                {/* Row 1: title + date posted */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-gray-900 truncate">{job.title || "Untitled"}</p>
@@ -424,6 +493,12 @@ export default function Home() {
                     <p className="text-xs text-gray-400 truncate">{safeStr(job.location)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
+                    {/* Date posted top-right */}
+                    {job.posted_date && (
+                      <span className={`text-[10px] font-medium ${isRecent(job.posted_date) ? "text-green-600" : "text-gray-400"}`}>
+                        {isRecent(job.posted_date) ? "🟢 " : ""}{formatDate(job.posted_date)}
+                      </span>
+                    )}
                     <span className={`text-lg leading-none ${SCORE_COLOR(job.ai_score)}`}>
                       {job.ai_score ?? "—"}<span className="text-xs font-normal text-gray-400">/10</span>
                     </span>
@@ -434,22 +509,27 @@ export default function Home() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-1">
+                {/* Row 2: source badge + action buttons */}
+                <div className="flex items-center justify-between mt-1.5">
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-xs ${job.status !== "new" ? "text-indigo-500 font-medium" : "text-gray-400"}`}>
-                      {STATUS_LABELS[job.status] || job.status}
-                    </span>
                     {(() => { const si = sourceInfo(safeStr(job.source)); return (
                       <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${si.color}`}>{si.label}</span>
                     ); })()}
-                  </div>
-                  <div className="flex items-center gap-2">
                     {job.salary && <span className="text-xs text-green-600">{safeStr(job.salary)}</span>}
+                  </div>
+                  {/* Applied + Delete buttons */}
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={(e) => applyJob(job.id, e)}
+                      title="Mark as Applied — hides from list, won't reappear in scrapes"
+                      className="text-xs px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors font-medium">
+                      ✓ Applied
+                    </button>
                     <button
                       onClick={(e) => hideJob(job.id, e)}
-                      title="Hide this job"
-                      className="text-gray-300 hover:text-red-400 text-xs leading-none px-1 transition-colors">
-                      ✕
+                      title="Delete — hides from list, won't reappear in scrapes"
+                      className="text-xs px-2 py-0.5 rounded bg-red-50 text-red-500 border border-red-200 hover:bg-red-100 transition-colors font-medium">
+                      🗑 Delete
                     </button>
                   </div>
                 </div>
@@ -618,13 +698,13 @@ export default function Home() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-white rounded-xl border p-4 shadow-sm">
                       <h3 className="font-semibold text-green-700 mb-2 text-sm">
-                        ✓ Matches ({selected.ai_matches?.length || 0})
+                        ✓ Matches ({safeArr(selected.ai_matches).length})
                       </h3>
-                      {(selected.ai_matches || []).length === 0
+                      {safeArr(selected.ai_matches).length === 0
                         ? <p className="text-xs text-gray-400">None identified</p>
                         : (
                           <ul className="space-y-1">
-                            {selected.ai_matches.map((m, i) => (
+                            {safeArr(selected.ai_matches).map((m, i) => (
                               <li key={i} className="text-sm text-gray-700 flex gap-1.5">
                                 <span className="text-green-500 shrink-0">+</span>{m}
                               </li>
@@ -634,13 +714,13 @@ export default function Home() {
                     </div>
                     <div className="bg-white rounded-xl border p-4 shadow-sm">
                       <h3 className="font-semibold text-red-600 mb-2 text-sm">
-                        ✗ Gaps ({selected.ai_gaps?.length || 0})
+                        ✗ Gaps ({safeArr(selected.ai_gaps).length})
                       </h3>
-                      {(selected.ai_gaps || []).length === 0
+                      {safeArr(selected.ai_gaps).length === 0
                         ? <p className="text-xs text-gray-400">No gaps found</p>
                         : (
                           <ul className="space-y-1">
-                            {selected.ai_gaps.map((g, i) => (
+                            {safeArr(selected.ai_gaps).map((g, i) => (
                               <li key={i} className="text-sm text-gray-700 flex gap-1.5">
                                 <span className="text-red-400 shrink-0">–</span>{g}
                               </li>
@@ -651,11 +731,11 @@ export default function Home() {
                   </div>
 
                   {/* Red flags */}
-                  {(selected.ai_red_flags || []).length > 0 && (
+                  {safeArr(selected.ai_red_flags).length > 0 && (
                     <div className="bg-red-50 rounded-xl border border-red-200 p-4">
                       <h3 className="font-semibold text-red-700 mb-2 text-sm">⚠ Red Flags</h3>
                       <ul className="space-y-1">
-                        {selected.ai_red_flags.map((f, i) => (
+                        {safeArr(selected.ai_red_flags).map((f, i) => (
                           <li key={i} className="text-sm text-red-700">• {f}</li>
                         ))}
                       </ul>
@@ -665,11 +745,11 @@ export default function Home() {
                   {/* ATS Keywords */}
                   <div className="bg-white rounded-xl border p-4 shadow-sm">
                     <h3 className="font-semibold text-gray-800 mb-3 text-sm">ATS Keywords</h3>
-                    {(selected.ai_keywords_present || []).length > 0 && (
+                    {safeArr(selected.ai_keywords_present).length > 0 && (
                       <>
                         <p className="text-xs text-gray-400 mb-1">Present in your profile:</p>
                         <div className="flex flex-wrap gap-1.5 mb-3">
-                          {selected.ai_keywords_present.map((k) => (
+                          {safeArr(selected.ai_keywords_present).map((k) => (
                             <span key={k} className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full border border-green-200">
                               {k}
                             </span>
@@ -677,11 +757,11 @@ export default function Home() {
                         </div>
                       </>
                     )}
-                    {(selected.ai_keywords_missing || []).length > 0 && (
+                    {safeArr(selected.ai_keywords_missing).length > 0 && (
                       <>
                         <p className="text-xs text-gray-400 mb-1">Missing — add to resume:</p>
                         <div className="flex flex-wrap gap-1.5">
-                          {selected.ai_keywords_missing.map((k) => (
+                          {safeArr(selected.ai_keywords_missing).map((k) => (
                             <span key={k} className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full border border-red-200">
                               {k}
                             </span>
@@ -689,7 +769,7 @@ export default function Home() {
                         </div>
                       </>
                     )}
-                    {!(selected.ai_keywords_present?.length) && !(selected.ai_keywords_missing?.length) && (
+                    {!safeArr(selected.ai_keywords_present).length && !safeArr(selected.ai_keywords_missing).length && (
                       <p className="text-xs text-gray-400">No keyword data yet — re-score this job to populate.</p>
                     )}
                   </div>
