@@ -64,14 +64,26 @@ function safeArr(val: unknown): string[] {
   return [];
 }
 
+/** Parse a date string defensively — handles ISO (YYYY-MM-DD) and DD/MM/YYYY. */
+function parseDate(raw: string): Date | null {
+  if (!raw) return null;
+  // Try ISO first (standard)
+  let d = new Date(raw);
+  if (!isNaN(d.getTime())) return d;
+  // Fallback: DD/MM/YYYY (Reed legacy format before we fixed the scraper)
+  const m = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (m) { d = new Date(`${m[3]}-${m[2]}-${m[1]}`); if (!isNaN(d.getTime())) return d; }
+  return null;
+}
+
 /** Format a posted_date string as a short relative label like "2d ago", "Today", "Jun 3". */
 function formatDate(raw: string | null | undefined): string {
   if (!raw) return "";
   try {
-    const d = new Date(raw);
-    if (isNaN(d.getTime())) return "";
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
+    const d = parseDate(raw);
+    if (!d) return "";
+    const diffMs = Date.now() - d.getTime();
+    if (diffMs < 0) return d.toLocaleDateString("en-IE", { day: "numeric", month: "short" }); // future = show date
     const diffH = diffMs / 3_600_000;
     const diffD = Math.floor(diffMs / 86_400_000);
     if (diffH < 2) return "Just now";
@@ -86,8 +98,10 @@ function formatDate(raw: string | null | undefined): string {
 function isRecent(raw: string | null | undefined): boolean {
   if (!raw) return false;
   try {
-    const d = new Date(raw);
-    return !isNaN(d.getTime()) && (Date.now() - d.getTime()) < 86_400_000;
+    const d = parseDate(raw);
+    if (!d) return false;
+    const diff = Date.now() - d.getTime();
+    return diff >= 0 && diff < 86_400_000;  // must be past, not future
   } catch { return false; }
 }
 

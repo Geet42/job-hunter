@@ -435,7 +435,7 @@ def scrape_reed(keyword: str, location: str = "Ireland", max_results: int = 20) 
                 "url":         job.get("jobUrl"),
                 "salary":      _reed_salary(job),
                 "job_type":    job.get("jobType"),
-                "posted_date": job.get("date"),
+                "posted_date": _reed_date(job.get("date")),
             })
     except Exception as e:
         print(f"[scraper] Reed failed for '{keyword}': {e}")
@@ -449,6 +449,17 @@ def _reed_salary(job):
     if mn and mx:
         return f"£{int(mn):,}–£{int(mx):,}"
     return None
+
+
+def _reed_date(date_str: str | None) -> str | None:
+    """Convert Reed's DD/MM/YYYY to ISO YYYY-MM-DD so JS Date() parses it correctly."""
+    if not date_str:
+        return None
+    try:
+        from datetime import datetime
+        return datetime.strptime(date_str.strip(), "%d/%m/%Y").strftime("%Y-%m-%d")
+    except Exception:
+        return date_str  # return as-is if parse fails
 
 
 # ─── 4. Greenhouse Direct API (no key) ───────────────────────
