@@ -208,19 +208,23 @@ def cover_letter_endpoint(req: CoverLetterRequest):
 
 
 @app.post("/score/rescore")
-def rescore_all():
-    """Re-score all jobs in the DB that have no AI score yet."""
+def rescore_all(force: bool = Query(False, description="Re-score ALL jobs, not just unscored ones")):
+    """Re-score jobs. By default only unscored ones; pass ?force=true to re-score everything
+    (useful after switching scoring engine / improving the prompt)."""
     import threading
     def _do_rescore():
         db = get_client()
-        unscored = db.table("jobs").select("*").is_("ai_score", "null").execute().data or []
-        print(f"[rescore] {len(unscored)} unscored jobs found")
-        if unscored:
-            scored = score_jobs_batch(unscored)
+        if force:
+            jobs = db.table("jobs").select("*").execute().data or []
+        else:
+            jobs = db.table("jobs").select("*").is_("ai_score", "null").execute().data or []
+        print(f"[rescore] {len(jobs)} jobs to re-score (force={force})")
+        if jobs:
+            scored = score_jobs_batch(jobs)
             upsert_jobs(scored)
             print(f"[rescore] Scored {len(scored)} jobs")
     threading.Thread(target=_do_rescore, daemon=True).start()
-    return {"message": "Re-scoring started", "status": "started"}
+    return {"message": "Re-scoring started", "status": "started", "force": force}
 
 
 @app.post("/score")

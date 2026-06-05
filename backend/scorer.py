@@ -26,6 +26,12 @@ OLLAMA_MODEL = "llama3.2:3b"
 # Use Haiku for scoring (cheap), keep Sonnet only for resume/cover letter
 SCORE_MODEL = "claude-haiku-4-5"
 
+# Scoring engine: "claude" (default — far better gap/match extraction, ~cents
+# per full search) or "ollama" (free local, but the 3B model leaves gaps empty
+# ~70% of the time). Set SCORING_ENGINE=ollama in .env to use free local scoring.
+SCORING_ENGINE = os.environ.get("SCORING_ENGINE", "claude").lower()
+PREFER_OLLAMA  = SCORING_ENGINE == "ollama"
+
 CANDIDATE_RESUME = """
 Geet Prashant Bhute | Dublin, Ireland | geetbhute18@gmail.com | github.com/Geet42 | linkedin.com/in/geetbhute
 
@@ -83,6 +89,16 @@ Score out of 100 -> divide by 10 for final score. Be precise, do not inflate.
 
 STEP 3 — VERDICT:
 8-10 = Strong Apply, 6-7 = Apply, 4-5 = Maybe, 1-3 = Skip
+
+STEP 4 — GAPS (MANDATORY — never return an empty gaps array for an engineering role):
+List EVERY concrete requirement in the JD that the candidate does NOT clearly evidence. Always include:
+  - Any years-of-experience requirement the candidate (entry-level, <1 yr professional) does not meet
+    (e.g. "2 years of experience with distributed systems")
+  - Any specific technology, language, framework, protocol, or domain named in the JD that is absent
+    from the candidate profile (e.g. Angular, Go, Kubernetes at scale, BGP/ISIS routing, ML frameworks)
+  - Any required degree level, certification, or specialised knowledge the candidate lacks
+A strong overall match still has gaps — be honest and specific. If you truly find none, say so explicitly
+in one gap entry, but for almost every real JD there are at least 2-4 genuine gaps.
 
 CANDIDATE RESUME + GITHUB (github.com/Geet42):
 {candidate}
@@ -201,7 +217,7 @@ def score_job(job: dict) -> dict:
                 "ai_engine": "pre-filter", "ai_error": None}
 
     try:
-        if _ollama_available():
+        if PREFER_OLLAMA and _ollama_available():
             analysis = _score_with_ollama(job)
             engine   = "ollama"
         else:
@@ -231,16 +247,15 @@ def score_jobs_batch(jobs: list[dict]) -> list[dict]:
 
     print(f"[scorer] {len(scorable)} jobs to score, {len(no_desc)} skipped (no description)")
 
-    use_ollama = _ollama_available()
-    print(f"[scorer] Engine: {'Ollama (FREE)' if use_ollama else 'Claude Haiku'}")
+    use_ollama = PREFER_OLLAMA and _ollama_available()
+    print(f"[scorer] Engine: {'Ollama (FREE, local)' if use_ollama else 'Claude Haiku'}")
 
     scored = []
     for i, job in enumerate(scorable):
         try:
             result = score_job(job)
             scored.append(result)
-            engine = "ollama" if use_ollama else "claude-haiku"
-            print(f"[scorer] {i+1}/{len(scorable)} scored: {job.get('title','?')[:40]} -> {result.get('ai_score')}/10 ({engine})")
+            print(f"[scorer] {i+1}/{len(scorable)} scored: {job.get('title','?')[:40]} -> {result.get('ai_score')}/10 ({result.get('ai_engine','?')})")
         except Exception as e:
             print(f"[scorer] Failed to score '{job.get('title','?')}': {e}")
             scored.append({**job, "ai_score": None, "ai_error": str(e)})
