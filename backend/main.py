@@ -2,9 +2,11 @@
 FastAPI backend — job search, scoring, tailoring endpoints.
 """
 
-# Load .env FIRST — before any local imports that read os.environ at module level
+# Load .env FIRST — before any local imports that read os.environ at module level.
+# override=True so .env values win over any empty/stale vars already in the
+# system environment (e.g. an empty ANTHROPIC_API_KEY shadowing the real key).
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
