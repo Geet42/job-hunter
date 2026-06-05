@@ -58,13 +58,18 @@ Software Engineering Intern | RCOEM | Dec 2024–May 2025
   setup to under 5 minutes; published in JISEM 2025.
 
 Projects:
+Nora Comply — EU AI Act RAG Compliance Chatbot | TypeScript, Next.js, RAG, LangChain, Vector Search, LLM, ChromaDB
+- RAG chatbot answering EU AI Act compliance questions via semantic vector retrieval + LLM generation with source-grounded, citation-backed answers.
+CorpFin AI — Agentic Corporate Finance Autopilot | Python, LangChain, RAG, Monte Carlo Simulation, Observability
+- Agentic finance assistant combining RAG over financial docs with Monte Carlo simulation and observable AI traces for multi-step reasoning.
+Job Hunter — AI Job Search & Resume Tailoring Platform | Python, FastAPI, Next.js, Supabase (PostgreSQL), Claude API, Web Scraping
+- Full-stack platform aggregating jobs from 8+ sources into Supabase via FastAPI; AI prompts score, gap-analyse, and tailor resumes; Next.js dashboard.
 Distributed University Event Booking System | Java 17, Spring Boot, Spring Cloud Gateway, PostgreSQL, Docker, Resilience4j
-- Designed Booking Service across 4-microservice architecture enforcing PENDING_PAYMENT state transitions.
-- Integrated Resilience4j circuit breakers; zero cascading failures in stress tests (team of 3).
-
+- 4-microservice architecture enforcing transactional state transitions; Resilience4j circuit breakers, zero cascading failures in stress tests.
 BankingApp-Resilience | Java 17, Spring Boot, Resilience4j, Docker, Kubernetes, Chaos Toolkit
-- Built resilient banking microservices with circuit breakers and retry logic via Docker and Kubernetes.
-- Validated fault tolerance via Chaos Toolkit experiments confirming zero cascading failures.
+- Resilient banking microservices with circuit breakers/retry via Docker + Kubernetes; Chaos Toolkit validated zero cascading failures.
+Angular Portfolio SPA | Angular, TypeScript, HTML5, CSS3, Vercel
+- Component-driven Angular SPA deployed to Vercel with automated builds, sub-3-minute deploys.
 
 Certifications: Spring Boot (Coding Shuttle) | Azure (Cloud, Security, Data Storage) | AWS Cloud Practitioner | Kubernetes & Linux (Linux Foundation)
 GitHub: github.com/Geet42

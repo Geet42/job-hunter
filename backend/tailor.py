@@ -79,13 +79,31 @@ Software Engineering Intern | RCOEM | Dec 2024 - May 2025 | Nagpur, India
 - Containerised full backend stack with Docker and configured GitHub Actions CI/CD, reducing environment setup to under 5 minutes; published in JISEM 2025.
 
 Projects
+(The resume should select the 2-3 projects MOST relevant to this specific JD from the pool below — AI/ML JDs favour Nora Comply / CorpFin AI / Job Hunter; backend/Java JDs favour the Event Booking / Banking microservices; frontend JDs favour the Angular SPA.)
+
+Nora Comply — EU AI Act RAG Compliance Chatbot | TypeScript, Next.js, RAG, LangChain, Vector Search, LLM, ChromaDB | Personal shipped project (github.com/Geet42)
+- Built a Retrieval-Augmented Generation chatbot that answers EU AI Act compliance questions, combining semantic vector retrieval with LLM generation to return grounded, citation-backed responses.
+- Engineered the retrieval pipeline (document chunking, embeddings, vector store) to minimise hallucination and keep every answer traceable to its source regulation.
+
+CorpFin AI — Agentic Corporate Finance Autopilot | Python, LangChain, RAG, Monte Carlo Simulation, Observability | Personal shipped project (github.com/Geet42)
+- Developed an agentic corporate-finance assistant combining RAG over financial documents with Monte Carlo simulation for quantitative scenario analysis.
+- Instrumented observable AI traces across every agent step, making multi-step financial reasoning debuggable and reliable.
+
+Job Hunter — AI Job Search & Resume Tailoring Platform | Python, FastAPI, Next.js, TypeScript, Supabase (PostgreSQL), Claude API, Web Scraping | Personal shipped project (github.com/Geet42)
+- Built a full-stack platform aggregating jobs from 8+ sources (LinkedIn, Workday, Greenhouse, Reed) through a FastAPI backend into a Supabase Postgres store, with parallelised scraping and deduplication.
+- Designed AI prompts to score, gap-analyse, and tailor resumes per job, surfaced through a Next.js dashboard with filtering, scoring, and application tracking.
+
 Distributed University Event Booking System | Java 17, Spring Boot, Spring Cloud Gateway, PostgreSQL, Docker, Resilience4j | UCD COMP41720
-- Designed Booking Service across 4-microservice architecture enforcing PENDING_PAYMENT state transitions using OOP and REST API coordination.
-- Integrated Resilience4j circuit breakers across all inter-service calls; zero cascading failures in payment-failure and seat-exhaustion stress tests (team of 3).
+- Architected a 4-service microservices system with Spring Cloud Gateway routing, enforcing transactional state transitions via REST API coordination across Booking, Payment, Notification, and Auth services.
+- Integrated Resilience4j circuit breakers across all inter-service calls; achieved zero cascading failures in payment-failure and seat-exhaustion stress tests (team of 3).
 
 BankingApp-Resilience | Java 17, Spring Boot, Resilience4j, Docker, Kubernetes, Chaos Toolkit | UCD Distributed Systems
-- Built resilient banking microservices with circuit breakers, retry logic, deployed via Docker Compose and Kubernetes manifests.
-- Validated fault tolerance via Chaos Toolkit experiments confirming zero cascading failures and full-service recovery.
+- Built resilient banking microservices with circuit breakers and retry logic, deployed via Docker Compose and Kubernetes manifests to replicate cloud-based containerised environments.
+- Validated fault tolerance and full-service recovery via Chaos Toolkit experiments, confirming zero cascading failures under simulated node and network outages.
+
+Angular Portfolio SPA | Angular, TypeScript, HTML5, CSS3, Vercel | Personal shipped project (geetbhute.vercel.app)
+- Architected a Single Page Application with Angular and TypeScript using a component-driven UI, delivering responsive HTML5/CSS3 interfaces across all modern browsers.
+- Deployed to Vercel with automated build pipelines, cutting deployment lead time to under 3 minutes with 100% uptime across releases.
 
 Education
 MSc Computer Science (Negotiated Learning) | University College Dublin | Sep 2025 - Present
@@ -121,6 +139,7 @@ CONTENT RULES (apply before writing):
 - ATS: mirror JD language exactly; spell out acronyms if JD does; use standard section headers only.
 - Human readability: no two bullets start with the same verb; vary sentence rhythm; bullets must sound like a competent engineer, not keyword stuffing.
 - Exactly 2 bullets per experience entry; exactly 2 bullets per project entry.
+- PROJECTS: choose only the 2-3 projects from the candidate's pool that best match THIS JD's stack (AI/ML/RAG -> Nora Comply, CorpFin AI, Job Hunter; Java/backend/microservices -> Event Booking, BankingApp; frontend/Angular -> Portfolio SPA). Never output all of them, and never default to the same two — pick by relevance to the JD.
 - Each bullet: Action verb + JD-matched technology/method + quantified result (must include a number, %, or concrete scale).
 
 Output ONLY valid JSON — no markdown, no code fences, no explanation:
