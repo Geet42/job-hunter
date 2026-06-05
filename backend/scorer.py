@@ -14,6 +14,7 @@ Combined: ~60x cheaper than original implementation.
 """
 
 import os
+import re
 import json
 import httpx
 import anthropic
@@ -135,9 +136,22 @@ def _parse_json(raw: str) -> dict | list:
     obj_start = raw.find("{")
     if arr_start != -1 and (obj_start == -1 or arr_start < obj_start):
         end = raw.rfind("]") + 1
-        return json.loads(raw[arr_start:end])
-    end = raw.rfind("}") + 1
-    return json.loads(raw[obj_start:end])
+        frag = raw[arr_start:end]
+    else:
+        end = raw.rfind("}") + 1
+        frag = raw[obj_start:end]
+    try:
+        return json.loads(frag)
+    except json.JSONDecodeError:
+        # Truncated mid-structure — trim to last complete value and close brackets
+        salvage = re.sub(r"[,\s]+$", "", frag)
+        m = list(re.finditer(r'"(?:[^"\\]|\\.)*"\s*(?=[,\]}])', salvage))
+        if m:
+            salvage = salvage[: m[-1].end()]
+        salvage = re.sub(r"[,\s]+$", "", salvage)
+        salvage += ("]" * max(salvage.count("[") - salvage.count("]"), 0))
+        salvage += ("}" * max(salvage.count("{") - salvage.count("}"), 0))
+        return json.loads(salvage)
 
 
 def _ollama_available() -> bool:
@@ -176,11 +190,17 @@ def _score_single_with_claude(job: dict) -> dict:
     )
     msg = client.messages.create(
         model=SCORE_MODEL,
-        max_tokens=600,
-        system="You are a technical recruiter and ATS expert. Respond only with valid JSON.",
-        messages=[{"role": "user", "content": prompt}],
+        max_tokens=1200,
+        system="You are a technical recruiter and ATS expert. Output ONLY one JSON object, no reasoning text.",
+        messages=[
+            {"role": "user", "content": prompt},
+            # Prefill the assistant turn with "{" so Claude is forced to emit JSON
+            # immediately (no reasoning preamble) — guarantees a parseable object.
+            {"role": "assistant", "content": "{"},
+        ],
     )
-    result = _parse_json(msg.content[0].text)
+    text = "{" + msg.content[0].text  # re-add the prefilled brace
+    result = _parse_json(text)
     if isinstance(result, list):
         result = result[0]
     return result
