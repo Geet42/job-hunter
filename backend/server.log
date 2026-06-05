@@ -1,12 +1,173 @@
-INFO:     Started server process [36608]
+INFO:     Started server process [11080]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:57466 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57468 - "POST /score/rescore?force=true HTTP/1.1" 200 OK
-[rescore] 48 jobs to re-score (force=True, 29 hidden/bad skipped)
-[scorer] 43 jobs to score, 5 skipped (no description)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61521 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61523 - "POST /score/rescore?force=true HTTP/1.1" 200 OK
+[rescore] 45 jobs to re-score (force=True, 32 hidden/bad skipped)
+[scorer] 40 jobs to score, 5 skipped (no description)
 [scorer] Engine: Claude Haiku
-INFO:     127.0.0.1:57472 - "GET /jobs?min_score=0&limit=200 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60204 - "GET /jobs?min_score=0&limit=200 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54444 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 1/40 scored: Product Applications Engineer -> 3/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 2/40 scored: Site Reliability Engineer - xAI Technica -> 3/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 3/40 scored: Software Engineer - Full Stack -> 7.2/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 4/40 scored: Technician, Engineering - Weekend Shift -> 1/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 5/40 scored: Backend Developer -> 3.2/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "OPTIONS /tailor/gap-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 6/40 scored: Graduate AI software engineer -> 7.8/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 7/40 scored: Software Engineering MTS -> 5.2/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 8/40 scored: Software Engineer -> 4.2/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 9/40 scored: Software Engineer (Frontend) -> 7.2/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 10/40 scored: Machine Learning Engineer -> 7.2/10 (claude-haiku)
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53667 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "POST /tailor/gap-analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 11/40 scored: Junior Java Software Engineer -> 8.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 12/40 scored: Python Developer -> 8.5/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "OPTIONS /tailor/resume HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 13/40 scored: Python Engineer - up to £60,000 + Bonus  -> 7.2/10 (claude-haiku)
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 14/40 scored: Test Engineering Graduate (12 Month Fixe -> 7.8/10 (claude-haiku)
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 15/40 scored: Test Automation Engineer - up to £60,000 -> 3.2/10 (claude-haiku)
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 16/40 scored: Machine Learning Scientist - AI Trainer -> 3.2/10 (claude-haiku)
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61276 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "POST /tailor/resume HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 17/40 scored: IAM/RBAC Full Stack Developer (Java/UI/D -> 6.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63245 - "GET /tailor/resume/download/Geet_Bhute_Artificial_Intelligence_Engineer_Fruition_Group_Irela_1780654625.docx HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 18/40 scored: Software Engineer -> 3.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 19/40 scored: Site Reliability Engineer I-1 -> 5.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 20/40 scored: kdb+ Engineer -> 1.5/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 21/40 scored: Software engineer, intern -> 8.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 22/40 scored: Graduate Software Engineer, Open Source  -> 7.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 23/40 scored: Junior JavaScript Developer -> 7.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 24/40 scored: Full Stack Developer -> 5.2/10 (claude-haiku)
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56257 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 25/40 scored: Software Engineer -> 4.2/10 (claude-haiku)
+[scorer] 26/40 scored: Software Development Engineer in Test (S -> 5.8/10 (claude-haiku)
+INFO:     127.0.0.1:56746 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56746 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56746 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 27/40 scored: Full Stack Engineer - Contract -> 3.2/10 (claude-haiku)
+INFO:     127.0.0.1:56746 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56746 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 28/40 scored: Prototype Technician, Engineering Servic -> 1/10 (claude-haiku)
+INFO:     127.0.0.1:56746 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 29/40 scored: Data & AI Engineer -> 7.2/10 (claude-haiku)
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 30/40 scored: Software Engineer - Apps -> 6.8/10 (claude-haiku)
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 31/40 scored: DevOps Engineer,  Charles River Developm -> 5/10 (claude-haiku)
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 32/40 scored: Software Developer for AI Model Training -> 8.5/10 (claude-haiku)
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 33/40 scored: Artificial Intelligence Engineer -> 3.2/10 (claude-haiku)
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52338 - "GET /search/status HTTP/1.1" 200 OK
+[scorer] 34/40 scored: Full Stack .Net Developer - Omnichannel  -> 3/10 (claude-haiku)
+[scorer] 35/40 scored: Exchange Traded Fund (ETF) Software Engi -> 7.2/10 (claude-haiku-fallback)
+INFO:     127.0.0.1:60039 - "GET /search/status HTTP/1.1" 200 OK
+Exception in thread Thread-1 (_do_rescore):
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Downloads\job-hunter\backend\main.py", line 230, in _do_rescore
+    upsert_jobs(scored)
+    ~~~~~~~~~~~^^^^^^^^
+  File "D:\Downloads\job-hunter\backend\db.py", line 61, in upsert_jobs
+    result = db.table("jobs").upsert(rows, on_conflict="url").execute()
+  File "C:\Users\HP\AppData\Roaming\Python\Python313\site-packages\postgrest\_sync\request_builder.py", line 78, in execute
+    raise APIError(r.json())
+postgrest.exceptions.APIError: {'code': '22P02', 'details': None, 'hint': None, 'message': 'invalid input syntax for type integer: "8.5"'}
+[scorer] 36/40 scored: Applied Machine Learning Scientist -> 3.2/10 (claude-haiku)
+[scorer] 37/40 scored: .NET Developer -> 2/10 (claude-haiku)
+[scorer] 38/40 scored: Junior Database QA Automation Engineer,  -> 3/10 (claude-haiku)
+[scorer] 39/40 scored: Data scientist I -> 3.2/10 (claude-haiku)
+[scorer] 40/40 scored: Data Engineer - Belfast -> 5/10 (claude-haiku)
+INFO:     127.0.0.1:58159 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53823 - "GET /search/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50448 - "GET /search/status HTTP/1.1" 200 OK

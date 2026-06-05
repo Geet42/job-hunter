@@ -155,7 +155,9 @@ CONTENT RULES (apply before writing):
 - Use the JD's exact verb phrases in bullets wherever truthful.
 - If candidate has a gap vs JD, frame the closest real evidence toward that skill without exaggeration.
 - Bold terms are primary technologies and metrics — list them in bold_terms[] only, NOT in bullet text.
-- Bullet text must be plain ASCII — no em dashes, no **markdown**, no unicode punctuation.
+- Bullet text must be plain ASCII — no em dashes, no en dashes, no tildes, no **markdown**, no unicode punctuation. Use hyphen-minus (-) and straight quotes only.
+- Use PAST TENSE for every experience and project bullet.
+- bold_terms[] must list BOTH the bullet's metrics (numbers, %, scale) AND its primary technology so both render bold.
 - Top 3 JD hard skills must appear at least 3 times each across the full resume.
 - ATS: mirror JD language exactly; spell out acronyms if JD does; use standard section headers only.
 - Human readability: no two bullets start with the same verb; vary sentence rhythm; bullets must sound like a competent engineer, not keyword stuffing.

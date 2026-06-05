@@ -300,10 +300,18 @@ def _clean_text(v):
     return _s(v)
 
 
+def _coerce_score(v):
+    """ai_score is an INTEGER column — round decimal scores (e.g. 8.5 -> 9)."""
+    try:
+        return int(round(float(v)))
+    except (TypeError, ValueError):
+        return None
+
+
 def _merge(job: dict, analysis: dict, engine: str) -> dict:
     return {
         **job,
-        "ai_score":           analysis.get("score"),
+        "ai_score":           _coerce_score(analysis.get("score")),
         "ai_verdict":         analysis.get("verdict"),
         "ai_verdict_reason":  _clean_text(analysis.get("verdict_reason")),
         "ai_matches":         _clean_text(analysis.get("matches", [])),

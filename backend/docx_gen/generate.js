@@ -23,13 +23,27 @@ const { name, contact, summary, skills, experience, projects, education, certifi
 
 // ── Design tokens ────────────────────────────────────────────
 const FONT       = "Calibri";
-const COLOR_HEAD = "1F3864";   // dark navy  — section headers
-const COLOR_RULE = "2E75B6";   // blue       — rule lines
-const COLOR_SUB  = "444444";   // dark gray  — company / tech line
-const COLOR_META = "666666";   // medium     — dates / location
-const BODY_PT    = 19;         // 9.5 pt  (half-points)
-const HEAD_PT    = 20;         // 10 pt
-const NAME_PT    = 32;         // 16 pt
+const COLOR_HEAD = "1F3864";   // dark navy  - section headers
+const COLOR_RULE = "2E75B6";   // blue       - rule lines
+const COLOR_SUB  = "444444";   // dark gray  - company / tech line
+const COLOR_META = "666666";   // medium     - dates / location
+const BODY_PT    = 20;         // 10 pt  (half-points)
+const HEAD_PT    = 22;         // 11 pt
+const NAME_PT    = 30;         // 15 pt
+
+// Auto-bold: metrics and scale tokens are always bolded per ATS resume best practice
+const METRIC_RE = /(\d+(?:\.\d+)?%|\$\d[\d,]*|\d[\d,]*\+|\d[\d,]*x\b|\bsub-second\b|\b\d[\d,]*\b)/gi;
+
+/** Collect metric substrings in a bullet so they get bolded automatically. */
+function autoMetricTerms(text) {
+  const found = [];
+  let m;
+  METRIC_RE.lastIndex = 0;
+  while ((m = METRIC_RE.exec(text)) !== null) {
+    if (m[0] && m[0].length >= 1) found.push(m[0]);
+  }
+  return found;
+}
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -63,6 +77,11 @@ function bullet(text, bold_ranges = []) {
 
   // Inline bullet character in Calibri — renders correctly in Word, LibreOffice, PDF
   runs.push(new TextRun({ text: "•  ", font: FONT, size: BODY_PT }));
+
+  // Always bold metrics/scale tokens in addition to the model-supplied terms
+  bold_ranges = [...new Set([...(bold_ranges || []), ...autoMetricTerms(text)])]
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);  // longer terms first to avoid partial overlaps
 
   if (!bold_ranges || bold_ranges.length === 0) {
     runs.push(new TextRun({ text, font: FONT, size: BODY_PT }));
