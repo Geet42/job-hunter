@@ -285,17 +285,32 @@ def score_jobs_batch(jobs: list[dict]) -> list[dict]:
     return all_results
 
 
+def _clean_text(v):
+    """Normalise em/en dashes and curly quotes to ASCII in strings and string lists."""
+    repl = {"—": "-", "–": "-", "‒": "-", "―": "-", "‘": "'", "’": "'",
+            "“": '"', "”": '"', "…": "...", " ": " ", "•": "-"}
+    def _s(t):
+        if not isinstance(t, str):
+            return t
+        for b, g in repl.items():
+            t = t.replace(b, g)
+        return t
+    if isinstance(v, list):
+        return [_s(x) for x in v]
+    return _s(v)
+
+
 def _merge(job: dict, analysis: dict, engine: str) -> dict:
     return {
         **job,
         "ai_score":           analysis.get("score"),
         "ai_verdict":         analysis.get("verdict"),
-        "ai_verdict_reason":  analysis.get("verdict_reason"),
-        "ai_matches":         analysis.get("matches", []),
-        "ai_gaps":            analysis.get("gaps", []),
-        "ai_red_flags":       analysis.get("red_flags", []),
-        "ai_keywords_present": analysis.get("ats_keywords_present", []),
-        "ai_keywords_missing": analysis.get("ats_keywords_missing", []),
+        "ai_verdict_reason":  _clean_text(analysis.get("verdict_reason")),
+        "ai_matches":         _clean_text(analysis.get("matches", [])),
+        "ai_gaps":            _clean_text(analysis.get("gaps", [])),
+        "ai_red_flags":       _clean_text(analysis.get("red_flags", [])),
+        "ai_keywords_present": _clean_text(analysis.get("ats_keywords_present", [])),
+        "ai_keywords_missing": _clean_text(analysis.get("ats_keywords_missing", [])),
         "ai_apply":           analysis.get("apply_recommendation"),
         "ai_breakdown": {
             "required_skills":  analysis.get("required_skills_score"),

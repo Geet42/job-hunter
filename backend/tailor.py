@@ -16,6 +16,27 @@ from profile import COVER_LETTER_PROMPT_TEMPLATE
 client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 
+def strip_dashes(text: str) -> str:
+    """Replace em/en dashes (and other non-ASCII punctuation) with plain ASCII.
+    Resumes and cover letters must be pure ASCII for ATS compatibility."""
+    if not text:
+        return text
+    repl = {
+        "—": "-",   # em dash —
+        "–": "-",   # en dash –
+        "‒": "-",   # figure dash
+        "―": "-",   # horizontal bar
+        "‘": "'", "’": "'",   # curly single quotes
+        "“": '"', "”": '"',   # curly double quotes
+        "…": "...",                # ellipsis …
+        " ": " ",                  # non-breaking space
+        "•": "-",                  # bullet •
+    }
+    for bad, good in repl.items():
+        text = text.replace(bad, good)
+    return text
+
+
 def _parse_llm_json(raw: str):
     """Parse JSON from a Claude response, tolerating markdown fences and
     truncation (max_tokens cut the response off mid-structure)."""
@@ -263,6 +284,11 @@ def analyze_gaps(job_description: str, job_title: str = "", company: str = "") -
     suggestions = _parse_llm_json(message.content[0].text)
     if isinstance(suggestions, dict):
         suggestions = [suggestions]
+    # Normalise dashes/quotes in every text field
+    for s in suggestions:
+        for k, v in list(s.items()):
+            if isinstance(v, str):
+                s[k] = strip_dashes(v)
     return suggestions
 
 
@@ -297,14 +323,21 @@ def tailor_resume(job_description: str, job_title: str = "", company: str = "",
 
     # Strip **bold** markdown from all text fields — the DOCX generator
     # handles bolding via bold_terms[], so literal asterisks must be removed.
-    def _strip_bold(text: str) -> str:
-        return re.sub(r"\*\*(.+?)\*\*", r"\1", text) if text else text
+    def _clean(text: str) -> str:
+        # Remove **markdown bold** and normalise all dashes/quotes to ASCII
+        return strip_dashes(re.sub(r"\*\*(.+?)\*\*", r"\1", text) if text else text)
 
-    resume_data["summary"] = _strip_bold(resume_data.get("summary", ""))
+    resume_data["summary"] = _clean(resume_data.get("summary", ""))
     for exp in resume_data.get("experience", []):
-        exp["bullets"] = [_strip_bold(b) for b in exp.get("bullets", [])]
+        exp["bullets"] = [_clean(b) for b in exp.get("bullets", [])]
+        exp["title"] = _clean(exp.get("title", ""))
+        exp["company"] = _clean(exp.get("company", ""))
     for proj in resume_data.get("projects", []):
-        proj["bullets"] = [_strip_bold(b) for b in proj.get("bullets", [])]
+        proj["bullets"] = [_clean(b) for b in proj.get("bullets", [])]
+        proj["name"] = _clean(proj.get("name", ""))
+        proj["context"] = _clean(proj.get("context", ""))
+    for k, v in (resume_data.get("skills") or {}).items():
+        resume_data["skills"][k] = _clean(v)
 
     # Set output path
     safe_title = (job_title or "resume").replace(" ", "_").replace("/", "-")[:40]
@@ -366,4 +399,4 @@ def generate_cover_letter(
         messages=[{"role": "user", "content": prompt}],
     )
 
-    return message.content[0].text
+    return strip_dashes(message.content[0].text)
