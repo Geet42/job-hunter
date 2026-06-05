@@ -1,0 +1,12 @@
+INFO:     Started server process [36608]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:57466 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57468 - "POST /score/rescore?force=true HTTP/1.1" 200 OK
+[rescore] 48 jobs to re-score (force=True, 29 hidden/bad skipped)
+[scorer] 43 jobs to score, 5 skipped (no description)
+[scorer] Engine: Claude Haiku
+INFO:     127.0.0.1:57472 - "GET /jobs?min_score=0&limit=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60204 - "GET /jobs?min_score=0&limit=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54444 - "GET /search/status HTTP/1.1" 200 OK

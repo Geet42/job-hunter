@@ -107,17 +107,11 @@ def delete_job(job_id: str) -> bool:
     return True
 
 
-def purge_bad_jobs() -> int:
-    """
-    Delete non-engineering / senior / irrelevant jobs from DB.
-    Called after each full search to keep the DB clean.
-    Returns count of deleted jobs.
-    """
-    import re
-    db = get_client()
-    all_jobs = db.table("jobs").select("id,title,description").execute().data or []
+import re as _re
 
-    non_eng_words = [
+# ── Shared bad-job test (used both to PRE-FILTER before scoring and to purge) ──
+
+_NON_ENG_WORDS = [
         "account executive", "account manager", "account director", "account development",
         "sales", "marketing", "campaign", "human resources", " hr ", "recruiter",
         "finance manager", "financial analyst", "accounting", "accountant",
@@ -144,62 +138,78 @@ def purge_bad_jobs() -> int:
         "medical science liaison", "science liaison", "clinical research",
         "regulatory affairs", "medical affairs", "pharmacovigilance",
         "supply chain", "logistics", "procurement", "buyer", "warehouse",
-        "operations specialist", "msl ",
-    ]
-    # Word-boundary senior-title regex (mirrors scraper._SENIOR_TITLE_RE) — catches
-    # "Principal Oracle Engineer", "Lead Data Engineer", "Manager,", "Engineer II/III", etc.
-    senior_title_re = re.compile(
-        r'\b('
-        r'senior|sr\.?|staff|principal|lead|director|head\s+of|'
-        r'vp|svp|evp|vice\s+president|chief|cto|ceo|'
-        r'manager|managing|architect|'
-        r'ii|iii|iv|vi+'
-        r')\b'
-        r'|\bengineer\s+[2-9]\b'
-        r'|\blevel\s+[2-9]\b',
-        re.IGNORECASE,
-    )
-    senior_exp_re = re.compile(
-        r'\b([3-9]|1[0-9])\+?\s*years?\b'
-        r'|minimum\s*(of\s*)?([3-9]|1[0-9])\s*years?\b'
-        r'|at\s*least\s*([3-9]|1[0-9])\s*years?\b'
-        r'|\b([3-9]|1[0-9])\+\s*yrs?\b',
-        re.IGNORECASE,
-    )
-    range_exp_re = re.compile(r'\b\d+\s*[-]\s*(\d+)\+?\s*years?\b', re.IGNORECASE)
-    do_not_apply_re = re.compile(
-        r'(intern|new\s*grad).*?please\s*do\s*not\s*apply'
-        r'|if\s+you\s+are\s+(an?\s+)?(intern|new\s*grad).*?do\s*not\s*apply',
-        re.IGNORECASE | re.DOTALL,
-    )
-    entry_re = re.compile(r'\b(intern|junior|graduate|entry.level|new\s*grad)\b', re.IGNORECASE)
+    "operations specialist", "msl ",
+]
 
+# Word-boundary senior-title regex (mirrors scraper._SENIOR_TITLE_RE).
+_SENIOR_TITLE_RE = _re.compile(
+    r'\b('
+    r'senior|sr\.?|staff|principal|lead|director|head\s+of|'
+    r'vp|svp|evp|vice\s+president|chief|cto|ceo|'
+    r'manager|managing|architect|'
+    r'ii|iii|iv|vi+'
+    r')\b'
+    r'|\bengineer\s+[2-9]\b'
+    r'|\blevel\s+[2-9]\b',
+    _re.IGNORECASE,
+)
+_SENIOR_EXP_RE = _re.compile(
+    r'\b([3-9]|1[0-9])\+?\s*years?\b'
+    r'|minimum\s*(of\s*)?([3-9]|1[0-9])\s*years?\b'
+    r'|at\s*least\s*([3-9]|1[0-9])\s*years?\b'
+    r'|\b([3-9]|1[0-9])\+\s*yrs?\b',
+    _re.IGNORECASE,
+)
+_RANGE_EXP_RE = _re.compile(r'\b\d+\s*[-]\s*(\d+)\+?\s*years?\b', _re.IGNORECASE)
+_DO_NOT_APPLY_RE = _re.compile(
+    r'(intern|new\s*grad).*?please\s*do\s*not\s*apply'
+    r'|if\s+you\s+are\s+(an?\s+)?(intern|new\s*grad).*?do\s*not\s*apply',
+    _re.IGNORECASE | _re.DOTALL,
+)
+_ENTRY_RE = _re.compile(r'\b(intern|junior|graduate|entry.level|new\s*grad)\b', _re.IGNORECASE)
+
+
+def is_bad_job(job: dict) -> bool:
+    """True if the job is non-engineering / too senior / requires too much experience.
+    Used to PRE-FILTER before AI scoring (so we never spend tokens on jobs that
+    would be purged anyway) and by purge_bad_jobs()."""
+    title = (job.get("title") or "").lower()
+    desc  = (job.get("description") or "")
+    title_entry = bool(_ENTRY_RE.search(title))
+
+    if any(w in title for w in _NON_ENG_WORDS):
+        return True
+    if not title_entry and _SENIOR_TITLE_RE.search(title):
+        return True
+    if _DO_NOT_APPLY_RE.search(desc[:1000]):
+        return True
+    if _SENIOR_EXP_RE.search(desc) and not title_entry:
+        return True
+    for m in _RANGE_EXP_RE.finditer(desc):
+        if int(m.group(1)) >= 5 and not title_entry:
+            return True
+    return False
+
+
+def get_hidden_urls() -> set:
+    """URLs of jobs the user has applied to or rejected — never re-score these."""
+    db = get_client()
+    result = db.table("jobs").select("url").in_("status", ["applied", "rejected"]).execute()
+    return {row["url"] for row in (result.data or []) if row.get("url")}
+
+
+def purge_bad_jobs() -> int:
+    """Delete non-engineering / senior / over-experienced jobs from the DB.
+    Returns count deleted. (Pre-filtering before scoring means this is now a
+    cheap safety net rather than the main filter.)"""
+    db = get_client()
+    all_jobs = db.table("jobs").select("id,title,description").execute().data or []
     deleted = 0
     for job in all_jobs:
-        title = (job.get("title") or "").lower()
-        desc  = (job.get("description") or "")
-        title_entry = bool(entry_re.search(title))
-        should_delete = False
-
-        if any(w in title for w in non_eng_words):
-            should_delete = True
-        elif not title_entry and senior_title_re.search(title):
-            should_delete = True
-        elif do_not_apply_re.search(desc[:1000]):
-            should_delete = True
-        elif senior_exp_re.search(desc) and not title_entry:
-            should_delete = True
-        else:
-            for m in range_exp_re.finditer(desc):
-                if int(m.group(1)) >= 5 and not title_entry:
-                    should_delete = True
-                    break
-
-        if should_delete:
+        if is_bad_job(job):
             db.table("jobs").delete().eq("id", job["id"]).execute()
             deleted += 1
             print(f"[db] purged: {job.get('title','?')[:60]}")
-
     return deleted
 
 

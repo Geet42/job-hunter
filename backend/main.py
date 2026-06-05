@@ -19,7 +19,7 @@ import os
 from scraper import scrape_all_sources, run_all_search_queries
 from scorer import score_jobs_batch, score_job
 from tailor import tailor_resume, generate_cover_letter, analyze_gaps
-from db import upsert_jobs, get_jobs, get_job, update_job_status, get_already_scored_urls, delete_job, purge_bad_jobs
+from db import upsert_jobs, get_jobs, get_job, update_job_status, get_already_scored_urls, delete_job, purge_bad_jobs, is_bad_job, get_hidden_urls
 
 app = FastAPI(title="Job Hunter API", version="1.0.0")
 
@@ -212,13 +212,19 @@ def rescore_all(force: bool = Query(False, description="Re-score ALL jobs, not j
     """Re-score jobs. By default only unscored ones; pass ?force=true to re-score everything
     (useful after switching scoring engine / improving the prompt)."""
     import threading
+    from db import get_client
     def _do_rescore():
         db = get_client()
         if force:
             jobs = db.table("jobs").select("*").execute().data or []
         else:
             jobs = db.table("jobs").select("*").is_("ai_score", "null").execute().data or []
-        print(f"[rescore] {len(jobs)} jobs to re-score (force={force})")
+        # Only score jobs that reach the final window: skip applied/rejected and
+        # bad (senior/non-eng) jobs so no AI tokens are wasted.
+        before = len(jobs)
+        jobs = [j for j in jobs
+                if j.get("status") not in ("applied", "rejected") and not is_bad_job(j)]
+        print(f"[rescore] {len(jobs)} jobs to re-score (force={force}, {before-len(jobs)} hidden/bad skipped)")
         if jobs:
             scored = score_jobs_batch(jobs)
             upsert_jobs(scored)
@@ -259,11 +265,13 @@ def _scrape_and_score(keyword: str, location: str, max_per_source: int, sources)
     _scrape_status = {"running": True, "progress": f"Scraping '{keyword}'...", "last_run": None, "total_found": 0}
     try:
         jobs = scrape_all_sources(keyword, location, max_per_source, sources)
+        # Drop bad jobs BEFORE saving/scoring so we never spend AI tokens on them
+        jobs = [j for j in jobs if not is_bad_job(j)]
         # Save unscored immediately so jobs appear in UI right away
         upsert_jobs(jobs)
         _scrape_status["total_found"] = len(jobs)
-        already_scored = get_already_scored_urls()
-        new_jobs = [j for j in jobs if j.get("url") not in already_scored]
+        skip = get_already_scored_urls() | get_hidden_urls()
+        new_jobs = [j for j in jobs if j.get("url") not in skip]
         _scrape_status["progress"] = f"AI scoring {len(new_jobs)} new jobs (browse now)..."
         scored = score_jobs_batch(new_jobs)
         upsert_jobs(scored)
@@ -284,9 +292,13 @@ def _full_scrape_and_score():
         jobs = run_all_search_queries(max_per_source=10)
         print(f"[main] Scraped {len(jobs)} total jobs")
 
-        # Filter out jobs with no URL or no title — Supabase requires URL not null
+        # Filter out jobs with no URL/title, then drop bad jobs (senior/non-eng/
+        # over-experienced) BEFORE scoring so AI tokens are only spent on jobs that
+        # actually reach the final window.
         jobs = [j for j in jobs if j.get("url") and j.get("title")]
-        print(f"[main] {len(jobs)} jobs have valid URL+title, upserting...")
+        before = len(jobs)
+        jobs = [j for j in jobs if not is_bad_job(j)]
+        print(f"[main] {len(jobs)} jobs pass entry-level filter ({before-len(jobs)} dropped pre-scoring), upserting...")
 
         # Save unscored immediately — jobs visible in UI NOW
         try:
@@ -299,18 +311,17 @@ def _full_scrape_and_score():
         _scrape_status["total_found"] = len(jobs)
         _scrape_status["progress"] = f"Found {len(jobs)} jobs — scoring new ones (browse now)..."
 
-        # Skip jobs already scored — saves Claude API calls
-        already_scored = get_already_scored_urls()
-        new_jobs = [j for j in jobs if j.get("url") not in already_scored]
-        print(f"[main] Scoring {len(new_jobs)} new jobs ({len(jobs)-len(new_jobs)} already scored, skipped)")
+        # Score only NEW jobs that aren't already scored and aren't applied/rejected.
+        skip = get_already_scored_urls() | get_hidden_urls()
+        new_jobs = [j for j in jobs if j.get("url") not in skip]
+        print(f"[main] Scoring {len(new_jobs)} new jobs ({len(jobs)-len(new_jobs)} already-scored/hidden, skipped)")
 
         if new_jobs:
             scored = score_jobs_batch(new_jobs)
             upsert_jobs(scored)
             print(f"[main] Scored and saved {len(scored)} jobs")
 
-        # Post-search DB purge — removes any bad/senior/non-engineering jobs
-        # that slipped through (old DB rows, scoring edge cases, etc.)
+        # Safety-net purge (pre-filter already removed most bad jobs)
         purged = purge_bad_jobs()
         if purged:
             print(f"[main] DB purge removed {purged} bad jobs")

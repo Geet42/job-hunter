@@ -72,33 +72,28 @@ Target: entry-level / intern / graduate software engineering, AI/ML, backend, fu
 NOT a match: sales, account executive, marketing, HR, finance, legal, customer success, product manager.
 """
 
-SCORE_PROMPT_SINGLE = """You are a technical recruiter and ATS expert. Analyze the match between the candidate and job. Respond ONLY with valid JSON — no markdown, no explanation.
+SCORE_PROMPT_SINGLE = """You are a technical recruiter and ATS expert. Analyze the match between the candidate's resume (and GitHub github.com/Geet42, as evidenced in the resume) and the job description. Respond ONLY with valid JSON — no markdown, no prose.
 
-STEP 1 — ROLE CHECK (MANDATORY — check job title first):
-The job title is: "{title}"
-If the job title contains ANY of these words/phrases -> IMMEDIATELY return the Skip JSON below, regardless of company or description:
-  sales, account executive, account manager, account development, business development, marketing, recruiter, recruitment, HR, human resources, legal, finance, financial, operations manager, program manager, product manager, customer success, customer support, regulatory, compliance, analyst (non-technical), consultant (non-technical), representative, coordinator, administrator, director (non-engineering)
-Non-engineering role Skip JSON: {{"score":1,"verdict":"Skip","verdict_reason":"Not a software engineering role — title '{title}' is non-technical","matches":[],"gaps":[],"red_flags":["Not a technical role"],"ats_keywords_present":[],"ats_keywords_missing":[],"required_skills_score":0,"preferred_skills_score":0,"cultural_fit_score":0,"ats_score":0,"apply_recommendation":"No"}}
+Work through these reasoning steps silently, then emit the JSON:
 
-STEP 2 — WEIGHTED SCORING (only for engineering roles):
-- Required Skills/Experience (50 pts): % of hard JD requirements met by candidate
-- Preferred/Desirable Skills (25 pts): % of preferred JD skills met
-- Cultural/Soft Fit (10 pts): teamwork, CI/CD discipline, collaboration signals
-- ATS Keyword Coverage (15 pts): % of JD keywords present in candidate profile
-Score out of 100 -> divide by 10 for final score. Be precise, do not inflate.
+STEP 1 — ROLE CHECK (check title first): "{title}"
+If the title is clearly non-technical (sales, account exec/manager, business development, marketing, recruiter, HR, legal, finance, operations manager, program/product manager, customer success/support, regulatory, compliance, non-technical analyst/consultant, representative, coordinator, administrator), return the Skip JSON:
+{{"score":1,"verdict":"Skip","verdict_reason":"Not a software engineering role — '{title}' is non-technical","matches":[],"gaps":[],"red_flags":["Not a technical role"],"ats_keywords_present":[],"ats_keywords_missing":[],"required_skills_score":0,"preferred_skills_score":0,"cultural_fit_score":0,"ats_score":0,"apply_recommendation":"No"}}
 
-STEP 3 — VERDICT:
-8-10 = Strong Apply, 6-7 = Apply, 4-5 = Maybe, 1-3 = Skip
+STEP 2 — EXTRACT FROM JD: list the hard requirements (must-haves), preferred skills (nice-to-haves), and ATS keywords (tools, languages, methodologies).
 
-STEP 4 — GAPS (MANDATORY — never return an empty gaps array for an engineering role):
-List EVERY concrete requirement in the JD that the candidate does NOT clearly evidence. Always include:
-  - Any years-of-experience requirement the candidate (entry-level, <1 yr professional) does not meet
-    (e.g. "2 years of experience with distributed systems")
-  - Any specific technology, language, framework, protocol, or domain named in the JD that is absent
-    from the candidate profile (e.g. Angular, Go, Kubernetes at scale, BGP/ISIS routing, ML frameworks)
-  - Any required degree level, certification, or specialised knowledge the candidate lacks
-A strong overall match still has gaps — be honest and specific. If you truly find none, say so explicitly
-in one gap entry, but for almost every real JD there are at least 2-4 genuine gaps.
+STEP 3 — ASSESS EACH against the candidate's resume + GitHub, classifying each as Explicitly Mentioned, Implied (strong contextual evidence from experience/projects), or Missing. Only count Implied when the evidence is strong.
+
+STEP 4 — WEIGHTED SCORE (be precise, do not inflate):
+- Required Skills/Experience (50 pts): % of hard requirements met (explicit or strongly implied)
+- Preferred/Desirable Skills (25 pts): % of preferred skills met
+- Cultural/Soft Fit (10 pts): teamwork, collaboration, CI/CD discipline, initiative (personal/open-source projects)
+- ATS Keyword Coverage (15 pts): % of JD keywords present in resume + GitHub
+Sum = score/100, then divide by 10 for the final 1-10 score.
+
+STEP 5 — VERDICT: 8-10 = Strong Apply, 6-7 = Apply, 4-5 = Maybe, 1-3 = Skip.
+
+STEP 6 — GAPS (MANDATORY — never empty for an engineering role): list every required/preferred skill, keyword, or experience that is Missing or weakly represented, and why it hurts the application. Always include: any years-of-experience requirement this entry-level candidate (<1 yr professional) fails to meet; any specific technology/language/framework/protocol/domain named in the JD but absent from the profile (e.g. Angular, Go, BGP/ISIS, large-scale infra); any required degree/cert. Almost every real JD yields 2-4 genuine gaps.
 
 CANDIDATE RESUME + GITHUB (github.com/Geet42):
 {candidate}
@@ -107,7 +102,7 @@ JOB: {title} at {company}
 {description}
 
 Respond with exactly this JSON:
-{{"score":<1-10>,"verdict":"<Strong Apply|Apply|Maybe|Skip>","verdict_reason":"<one precise sentence citing specific match or gap>","matches":["<explicit evidence of match>","<evidence>","<evidence>"],"gaps":["<specific missing requirement>","<gap>"],"red_flags":["<dealbreaker if any>"],"ats_keywords_present":["<exact JD keyword found in candidate profile>"],"ats_keywords_missing":["<JD keyword absent from profile>"],"required_skills_score":<0-50>,"preferred_skills_score":<0-25>,"cultural_fit_score":<0-10>,"ats_score":<0-15>,"apply_recommendation":"<Yes|Borderline|No>"}}"""
+{{"score":<1-10>,"verdict":"<Strong Apply|Apply|Maybe|Skip>","verdict_reason":"<one precise sentence citing specific match or gap>","matches":["<explicit/implied evidence>","<evidence>","<evidence>"],"gaps":["<specific missing requirement + why it matters>","<gap>"],"red_flags":["<dealbreaker if any>"],"ats_keywords_present":["<exact JD keyword found in profile>"],"ats_keywords_missing":["<JD keyword absent>"],"required_skills_score":<0-50>,"preferred_skills_score":<0-25>,"cultural_fit_score":<0-10>,"ats_score":<0-15>,"apply_recommendation":"<Yes|Borderline|No>"}}"""
 
 
 def _desc(job: dict, max_chars: int = 1500) -> str:
