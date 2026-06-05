@@ -196,8 +196,14 @@ export default function Home() {
   const [customScore, setCustomScore] = useState<Partial<Job> | null>(null);
 
   // ── Derived: apply client-side filters + sort recent first ──
+  const kw = keyword.trim().toLowerCase();
   const jobs = allJobs
     .filter((j) => {
+      // Live keyword filter — matches title, company, or location
+      if (kw) {
+        const hay = `${j.title || ""} ${safeStr(j.company)} ${safeStr(j.location)}`.toLowerCase();
+        if (!hay.includes(kw)) return false;
+      }
       // Always hide applied/rejected unless user explicitly filters for them
       if (!filterStatus && (j.status === "applied" || j.status === "rejected")) return false;
       if (matchedOnly && j.ai_verdict && !GOOD_VERDICTS.has(j.ai_verdict)) return false;
@@ -394,6 +400,17 @@ export default function Home() {
     if (selected?.id === jobId) setSelected((s) => s ? { ...s, status: "applied" } : s);
   };
 
+  const restoreJob = async (jobId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await fetch(`${API}/jobs/${jobId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "new" }),
+    });
+    setAllJobs((prev) => prev.map((j) => j.id === jobId ? { ...j, status: "new" } : j));
+    if (selected?.id === jobId) setSelected((s) => s ? { ...s, status: "new" } : s);
+  };
+
   const scoreCustomJD = async () => {
     if (!customJD.trim()) return;
     setGenerating(true);
@@ -451,12 +468,19 @@ export default function Home() {
           {/* Filters */}
           <div className="p-3 border-b border-slate-800 space-y-2">
             <div className="flex gap-2">
-              <input value={keyword} onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && searchKeyword()}
-                placeholder="Search keyword…"
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500" />
-              <button onClick={searchKeyword}
-                className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-400 transition-colors">Go</button>
+              <div className="relative flex-1">
+                <input value={keyword} onChange={(e) => setKeyword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && searchKeyword()}
+                  placeholder="Filter loaded jobs (title, company…)"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-7 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500" />
+                {keyword && (
+                  <button onClick={() => setKeyword("")}
+                    title="Clear filter"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-sm">✕</button>
+                )}
+              </div>
+              <button onClick={searchKeyword} title="Scrape job boards for this keyword (slower)"
+                className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-400 transition-colors whitespace-nowrap">Scrape</button>
             </div>
 
             <div className="flex gap-2">
@@ -546,20 +570,31 @@ export default function Home() {
                     ); })()}
                     {job.salary && <span className="text-[10px] text-emerald-400">{safeStr(job.salary)}</span>}
                   </div>
-                  {/* Applied + Delete buttons */}
+                  {/* Action buttons — Restore for applied/rejected, else Applied+Delete */}
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={(e) => applyJob(job.id, e)}
-                      title="Mark as Applied — hides from list, won't reappear in scrapes"
-                      className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors font-medium">
-                      ✓ Applied
-                    </button>
-                    <button
-                      onClick={(e) => hideJob(job.id, e)}
-                      title="Delete — hides from list, won't reappear in scrapes"
-                      className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/25 hover:bg-rose-500/20 transition-colors font-medium">
-                      ✕ Delete
-                    </button>
+                    {(job.status === "applied" || job.status === "rejected") ? (
+                      <button
+                        onClick={(e) => restoreJob(job.id, e)}
+                        title="Restore to New — undo applied/deleted"
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25 transition-colors font-medium">
+                        ↺ Restore
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={(e) => applyJob(job.id, e)}
+                          title="Mark as Applied — hides from list, won't reappear in scrapes"
+                          className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors font-medium">
+                          ✓ Applied
+                        </button>
+                        <button
+                          onClick={(e) => hideJob(job.id, e)}
+                          title="Delete — hides from list, won't reappear in scrapes"
+                          className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/25 hover:bg-rose-500/20 transition-colors font-medium">
+                          ✕ Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
