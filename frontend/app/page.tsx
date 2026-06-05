@@ -106,18 +106,18 @@ function isRecent(raw: string | null | undefined): boolean {
 }
 
 const VERDICT_COLOR: Record<string, string> = {
-  "Strong Apply": "bg-green-100 text-green-800 border-green-300",
-  Apply:          "bg-blue-100 text-blue-800 border-blue-300",
-  Maybe:          "bg-yellow-100 text-yellow-800 border-yellow-300",
-  Skip:           "bg-red-100 text-red-700 border-red-300",
+  "Strong Apply": "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  Apply:          "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  Maybe:          "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  Skip:           "bg-rose-500/15 text-rose-300 border-rose-500/30",
 };
 
 const SCORE_COLOR = (score: number | null) => {
-  if (!score) return "text-gray-400";
-  if (score >= 8) return "text-green-600 font-bold";
-  if (score >= 6) return "text-blue-600 font-bold";
-  if (score >= 4) return "text-yellow-600 font-bold";
-  return "text-red-500 font-bold";
+  if (!score) return "text-slate-500";
+  if (score >= 8) return "text-emerald-400 font-bold";
+  if (score >= 6) return "text-sky-400 font-bold";
+  if (score >= 4) return "text-amber-400 font-bold";
+  return "text-rose-400 font-bold";
 };
 
 const GOOD_VERDICTS = new Set(["Strong Apply", "Apply", "Maybe"]);
@@ -125,23 +125,23 @@ const GOOD_VERDICTS = new Set(["Strong Apply", "Apply", "Maybe"]);
 /** Normalise source string → short display label + colour */
 function sourceInfo(raw: string): { label: string; color: string } {
   const s = (raw || "").toLowerCase();
-  if (s.includes("linkedin"))    return { label: "LinkedIn",    color: "bg-blue-100 text-blue-700" };
-  if (s.includes("indeed"))      return { label: "Indeed",      color: "bg-indigo-100 text-indigo-700" };
-  if (s.includes("glassdoor"))   return { label: "Glassdoor",   color: "bg-green-100 text-green-700" };
-  if (s.includes("jobs.ie"))     return { label: "Jobs.ie",     color: "bg-orange-100 text-orange-700" };
-  if (s.includes("irishjobs"))   return { label: "IrishJobs",   color: "bg-red-100 text-red-700" };
-  if (s.includes("adzuna"))      return { label: "Adzuna",      color: "bg-purple-100 text-purple-700" };
-  if (s.includes("reed"))        return { label: "Reed",        color: "bg-pink-100 text-pink-700" };
-  if (s.includes("lever"))            return { label: "Career Site", color: "bg-gray-100 text-gray-600" };
-  if (s.includes("smartrecruiters")) return { label: "Career Site", color: "bg-gray-100 text-gray-600" };
-  if (s.includes("workday"))          return { label: "Career Site", color: "bg-cyan-100 text-cyan-700" };
-  if (s.includes("workable"))         return { label: "Career Site", color: "bg-teal-100 text-teal-700" };
-  if (s.includes("greenhouse") || s.includes("company career")) return { label: "Career Site", color: "bg-gray-100 text-gray-600" };
-  if (s.includes("totaljobs")) return { label: "TotalJobs",  color: "bg-amber-100 text-amber-700" };
-  if (s.includes("monster"))   return { label: "Monster",    color: "bg-violet-100 text-violet-700" };
-  if (s.includes("jooble"))    return { label: "Jooble",     color: "bg-lime-100 text-lime-700" };
-  if (s.includes("google jobs") || s.includes("via google")) return { label: "Google Jobs", color: "bg-yellow-100 text-yellow-700" };
-  return { label: raw || "Job Board", color: "bg-gray-100 text-gray-500" };
+  if (s.includes("linkedin"))    return { label: "LinkedIn",    color: "bg-sky-500/15 text-sky-300 border border-sky-500/25" };
+  if (s.includes("indeed"))      return { label: "Indeed",      color: "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25" };
+  if (s.includes("glassdoor"))   return { label: "Glassdoor",   color: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25" };
+  if (s.includes("jobs.ie"))     return { label: "Jobs.ie",     color: "bg-orange-500/15 text-orange-300 border border-orange-500/25" };
+  if (s.includes("irishjobs"))   return { label: "IrishJobs",   color: "bg-rose-500/15 text-rose-300 border border-rose-500/25" };
+  if (s.includes("adzuna"))      return { label: "Adzuna",      color: "bg-purple-500/15 text-purple-300 border border-purple-500/25" };
+  if (s.includes("reed"))        return { label: "Reed",        color: "bg-pink-500/15 text-pink-300 border border-pink-500/25" };
+  if (s.includes("lever"))            return { label: "Career Site", color: "bg-slate-700/50 text-slate-300 border border-slate-600/50" };
+  if (s.includes("smartrecruiters")) return { label: "Career Site", color: "bg-slate-700/50 text-slate-300 border border-slate-600/50" };
+  if (s.includes("workday"))          return { label: "Career Site", color: "bg-cyan-500/15 text-cyan-300 border border-cyan-500/25" };
+  if (s.includes("workable"))         return { label: "Career Site", color: "bg-teal-500/15 text-teal-300 border border-teal-500/25" };
+  if (s.includes("greenhouse") || s.includes("company career")) return { label: "Career Site", color: "bg-slate-700/50 text-slate-300 border border-slate-600/50" };
+  if (s.includes("totaljobs")) return { label: "TotalJobs",  color: "bg-amber-500/15 text-amber-300 border border-amber-500/25" };
+  if (s.includes("monster"))   return { label: "Monster",    color: "bg-violet-500/15 text-violet-300 border border-violet-500/25" };
+  if (s.includes("jooble"))    return { label: "Jooble",     color: "bg-lime-500/15 text-lime-300 border border-lime-500/25" };
+  if (s.includes("google jobs") || s.includes("via google")) return { label: "Google Jobs", color: "bg-yellow-500/15 text-yellow-300 border border-yellow-500/25" };
+  return { label: raw || "Job Board", color: "bg-slate-700/50 text-slate-400 border border-slate-600/50" };
 }
 
 const STATUS_OPTIONS = ["new", "saved", "applied", "interview", "rejected", "offer"];
@@ -410,29 +410,36 @@ export default function Home() {
 
   // ── Render ───────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans antialiased">
       {/* Header */}
-      <header className="bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Job Hunter — Ireland</h1>
-          <p className="text-xs text-gray-400">Geet Bhute · SDE / AI / Java / Full Stack</p>
+      <header className="bg-slate-900/80 backdrop-blur border-b border-slate-800 px-6 py-3 flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-500/20">
+            J
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-white tracking-tight">Job Hunter <span className="text-indigo-400">·</span> Ireland</h1>
+            <p className="text-xs text-slate-500">Geet Bhute · SDE / AI / Java / Full Stack</p>
+          </div>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-3 items-center">
           {scrapeStatus?.running && (
-            <span className="text-sm text-blue-600 animate-pulse bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-              ⟳ {scrapeStatus.progress}
+            <span className="text-sm text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-full border border-indigo-500/30 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+              {scrapeStatus.progress}
             </span>
           )}
           {scrapeStatus?.last_run && !scrapeStatus.running && (
-            <span className="text-xs text-gray-400">
-              Last: {scrapeStatus.last_run} · {scrapeStatus.total_found} found
+            <span className="text-xs text-slate-500">
+              Last run {scrapeStatus.last_run} · {scrapeStatus.total_found} found
             </span>
           )}
           <button onClick={startFullSearch} disabled={scrapeStatus?.running}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
+            className="bg-gradient-to-r from-indigo-500 to-violet-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-indigo-400 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/20 transition-all">
             Full Search
           </button>
-          <button onClick={fetchJobs} className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-200">
+          <button onClick={fetchJobs}
+            className="bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-sm hover:bg-slate-700 border border-slate-700 transition-colors">
             Refresh
           </button>
         </div>
@@ -440,27 +447,28 @@ export default function Home() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* ── Sidebar ── */}
-        <div className="w-88 min-w-[22rem] bg-white border-r flex flex-col overflow-hidden">
+        <div className="w-88 min-w-[22rem] bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden">
           {/* Filters */}
-          <div className="p-3 border-b space-y-2">
+          <div className="p-3 border-b border-slate-800 space-y-2">
             <div className="flex gap-2">
               <input value={keyword} onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && searchKeyword()}
-                placeholder="Search keyword…" className="flex-1 border rounded-lg px-3 py-1.5 text-sm" />
+                placeholder="Search keyword…"
+                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500" />
               <button onClick={searchKeyword}
-                className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-700">Go</button>
+                className="bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-400 transition-colors">Go</button>
             </div>
 
             <div className="flex gap-2">
               <select value={minScore} onChange={(e) => setMinScore(Number(e.target.value))}
-                className="border rounded px-2 py-1 text-sm flex-1">
+                className="bg-slate-800 border border-slate-700 text-slate-300 rounded-lg px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
                 <option value={6}>Score 6+ (Good)</option>
                 <option value={7}>Score 7+ (Strong)</option>
                 <option value={8}>Score 8+ (Excellent)</option>
                 <option value={1}>All scored</option>
               </select>
               <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                className="border rounded px-2 py-1 text-sm flex-1">
+                className="bg-slate-800 border border-slate-700 text-slate-300 rounded-lg px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
                 <option value="">All statuses</option>
                 {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
               </select>
@@ -469,21 +477,21 @@ export default function Home() {
             <div className="flex gap-2 items-center">
               {sources.length > 0 && (
                 <select value={filterSource} onChange={(e) => setFilterSource(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm flex-1">
+                  className="bg-slate-800 border border-slate-700 text-slate-300 rounded-lg px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
                   <option value="">All sources</option>
                   {sources.map((s) => <option key={s} value={s}>{sourceInfo(s).label} ({s.length > 20 ? s.slice(0,20)+"…" : s})</option>)}
                 </select>
               )}
-              <label className="flex items-center gap-1 text-xs text-gray-600 cursor-pointer whitespace-nowrap">
+              <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer whitespace-nowrap">
                 <input type="checkbox" checked={matchedOnly}
                   onChange={(e) => setMatchedOnly(e.target.checked)}
-                  className="rounded" />
+                  className="rounded bg-slate-800 border-slate-600 text-indigo-500 focus:ring-indigo-500/50" />
                 Hide Skip
               </label>
             </div>
 
-            <p className="text-xs text-gray-400">
-              {jobs.length} matched job{jobs.length !== 1 ? "s" : ""}
+            <p className="text-xs text-slate-500">
+              <span className="text-slate-300 font-semibold">{jobs.length}</span> matched job{jobs.length !== 1 ? "s" : ""}
               {allJobs.length !== jobs.length ? ` (of ${allJobs.length} scored)` : ""}
             </p>
           </div>
@@ -491,11 +499,11 @@ export default function Home() {
           {/* Job list */}
           <div className="flex-1 overflow-y-auto">
             {loading && (
-              <div className="p-4 text-center text-gray-400 text-sm">Loading…</div>
+              <div className="p-4 text-center text-slate-500 text-sm">Loading…</div>
             )}
             {!loading && jobs.length === 0 && (
-              <div className="p-6 text-center text-gray-400 space-y-2">
-                <p className="text-sm font-medium">No matched jobs yet</p>
+              <div className="p-6 text-center text-slate-500 space-y-2">
+                <p className="text-sm font-medium text-slate-400">No matched jobs yet</p>
                 <p className="text-xs">Click &quot;Full Search&quot; to scrape and score jobs.<br />
                   Scoring takes a few minutes — jobs appear as they&apos;re scored.</p>
               </div>
@@ -503,54 +511,54 @@ export default function Home() {
             {jobs.map((job) => (
               <div key={job.id} role="button" tabIndex={0}
                 onClick={() => { setSelected(job); setTab("analysis"); setResumeResult(null); setCoverLetter(""); setGenError(""); setGapSuggestions([]); }}
-                className={`w-full text-left p-3 border-b hover:bg-gray-50 transition-colors cursor-pointer ${
-                  selected?.id === job.id ? "bg-indigo-50 border-l-4 border-l-indigo-500" : ""
+                className={`w-full text-left px-3 py-3 border-b border-slate-800/60 hover:bg-slate-800/50 transition-colors cursor-pointer ${
+                  selected?.id === job.id ? "bg-indigo-500/10 border-l-2 border-l-indigo-400" : "border-l-2 border-l-transparent"
                 }`}>
                 {/* Row 1: title + date posted */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-gray-900 truncate">{job.title || "Untitled"}</p>
-                    <p className="text-xs text-gray-600 truncate">{safeStr(job.company)}</p>
-                    <p className="text-xs text-gray-400 truncate">{safeStr(job.location)}</p>
+                    <p className="font-medium text-sm text-slate-100 truncate">{job.title || "Untitled"}</p>
+                    <p className="text-xs text-slate-400 truncate">{safeStr(job.company)}</p>
+                    <p className="text-xs text-slate-500 truncate">{safeStr(job.location)}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {/* Date posted top-right */}
                     {job.posted_date && (
-                      <span className={`text-[10px] font-medium ${isRecent(job.posted_date) ? "text-green-600" : "text-gray-400"}`}>
-                        {isRecent(job.posted_date) ? "🟢 " : ""}{formatDate(job.posted_date)}
+                      <span className={`text-[10px] font-medium ${isRecent(job.posted_date) ? "text-emerald-400" : "text-slate-500"}`}>
+                        {isRecent(job.posted_date) ? "● " : ""}{formatDate(job.posted_date)}
                       </span>
                     )}
                     <span className={`text-lg leading-none ${SCORE_COLOR(job.ai_score)}`}>
-                      {job.ai_score ?? "—"}<span className="text-xs font-normal text-gray-400">/10</span>
+                      {job.ai_score ?? "—"}<span className="text-xs font-normal text-slate-500">/10</span>
                     </span>
                     {job.ai_verdict && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded border ${VERDICT_COLOR[job.ai_verdict] || "bg-gray-100 text-gray-600"}`}>
+                      <span className={`text-xs px-1.5 py-0.5 rounded border ${VERDICT_COLOR[job.ai_verdict] || "bg-slate-700/50 text-slate-300"}`}>
                         {job.ai_verdict}
                       </span>
                     )}
                   </div>
                 </div>
                 {/* Row 2: source badge + action buttons */}
-                <div className="flex items-center justify-between mt-1.5">
+                <div className="flex items-center justify-between mt-2">
                   <div className="flex items-center gap-1.5">
                     {(() => { const si = sourceInfo(safeStr(job.source)); return (
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${si.color}`}>{si.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${si.color}`}>{si.label}</span>
                     ); })()}
-                    {job.salary && <span className="text-xs text-green-600">{safeStr(job.salary)}</span>}
+                    {job.salary && <span className="text-[10px] text-emerald-400">{safeStr(job.salary)}</span>}
                   </div>
                   {/* Applied + Delete buttons */}
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={(e) => applyJob(job.id, e)}
                       title="Mark as Applied — hides from list, won't reappear in scrapes"
-                      className="text-xs px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors font-medium">
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors font-medium">
                       ✓ Applied
                     </button>
                     <button
                       onClick={(e) => hideJob(job.id, e)}
                       title="Delete — hides from list, won't reappear in scrapes"
-                      className="text-xs px-2 py-0.5 rounded bg-red-50 text-red-500 border border-red-200 hover:bg-red-100 transition-colors font-medium">
-                      🗑 Delete
+                      className="text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/25 hover:bg-rose-500/20 transition-colors font-medium">
+                      ✕ Delete
                     </button>
                   </div>
                 </div>
@@ -559,80 +567,86 @@ export default function Home() {
           </div>
 
           {/* Custom JD scorer */}
-          <div className="border-t p-3">
-            <p className="text-xs font-semibold text-gray-500 mb-1">SCORE A JOB FROM LINKEDIN / INDEED</p>
-            <p className="text-xs text-gray-400 mb-2">LinkedIn & Indeed block automated scraping. Copy a JD from any site and paste below to get AI scoring + tailored resume.</p>
+          <div className="border-t border-slate-800 p-3 bg-slate-900/50">
+            <p className="text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wide">Score a JD from anywhere</p>
+            <p className="text-xs text-slate-500 mb-2">Copy a job description from any site and paste below for AI scoring + tailored resume.</p>
             <textarea value={customJD} onChange={(e) => setCustomJD(e.target.value)}
               placeholder="Paste job description here…" rows={3}
-              className="w-full border rounded text-xs p-2 resize-none" />
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg text-xs p-2 resize-none text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
             <button onClick={scoreCustomJD} disabled={generating}
-              className="mt-1 w-full bg-gray-800 text-white text-sm py-1.5 rounded hover:bg-gray-700 disabled:opacity-50">
+              className="mt-1.5 w-full bg-slate-700 text-slate-100 text-sm py-1.5 rounded-lg hover:bg-slate-600 disabled:opacity-40 transition-colors">
               {generating ? "Scoring…" : "Score this JD"}
             </button>
             {customScore && (
-              <div className="mt-2 p-2 bg-gray-50 rounded text-xs space-y-1">
+              <div className="mt-2 p-2.5 bg-slate-800 border border-slate-700 rounded-lg text-xs space-y-1">
                 <p>
-                  <span className="font-semibold">Score:</span>{" "}
+                  <span className="font-semibold text-slate-300">Score:</span>{" "}
                   <span className={SCORE_COLOR(customScore.ai_score ?? null)}>{customScore.ai_score}/10</span>
-                  {" · "}{customScore.ai_verdict}
+                  <span className="text-slate-500">{" · "}{customScore.ai_verdict}</span>
                 </p>
-                <p className="text-gray-500">{customScore.ai_verdict_reason}</p>
+                <p className="text-slate-400">{customScore.ai_verdict_reason}</p>
               </div>
             )}
           </div>
         </div>
 
         {/* ── Main panel ── */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-950">
           {!selected && (
-            <div className="h-full flex items-center justify-center text-gray-300 flex-col gap-2">
-              <p className="text-lg">Select a job to see AI analysis</p>
-              <p className="text-sm">Score, matches, gaps, keywords, resume tailoring</p>
+            <div className="h-full flex items-center justify-center text-slate-600 flex-col gap-3">
+              <div className="h-16 w-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl">◎</div>
+              <p className="text-lg text-slate-400">Select a job to see AI analysis</p>
+              <p className="text-sm text-slate-600">Score · matches · gaps · keywords · resume tailoring</p>
             </div>
           )}
 
           {selected && (
             <div className="max-w-3xl mx-auto space-y-4">
               {/* Job header card */}
-              <div className="bg-white rounded-xl border p-5 shadow-sm">
+              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl shadow-black/20">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xl font-bold text-gray-900">{safeStr(selected.title)}</h2>
-                    <p className="text-gray-600 mt-0.5">
+                    <h2 className="text-xl font-bold text-white">{safeStr(selected.title)}</h2>
+                    <p className="text-slate-400 mt-0.5">
                       {safeStr(selected.company)}
                       {selected.location ? ` · ${safeStr(selected.location)}` : ""}
                     </p>
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {selected.source && (
-                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{safeStr(selected.source)}</span>
-                      )}
+                    <div className="flex gap-2 mt-2.5 flex-wrap items-center">
+                      {selected.source && (() => { const si = sourceInfo(safeStr(selected.source)); return (
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${si.color}`}>{si.label}</span>
+                      ); })()}
                       {selected.job_type && (
-                        <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{safeStr(selected.job_type)}</span>
+                        <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700">{safeStr(selected.job_type)}</span>
                       )}
                       {selected.salary && (
-                        <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">{safeStr(selected.salary)}</span>
+                        <span className="text-xs bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/25">{safeStr(selected.salary)}</span>
+                      )}
+                      {selected.posted_date && (
+                        <span className={`text-xs ${isRecent(selected.posted_date) ? "text-emerald-400" : "text-slate-500"}`}>
+                          {isRecent(selected.posted_date) ? "● " : ""}{formatDate(selected.posted_date)}
+                        </span>
                       )}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className={`text-5xl leading-none ${SCORE_COLOR(selected.ai_score)}`}>
                       {selected.ai_score ?? "—"}
-                      <span className="text-base font-normal text-gray-400">/10</span>
+                      <span className="text-base font-normal text-slate-600">/10</span>
                     </div>
                     {selected.ai_verdict && (
-                      <span className={`mt-1 inline-block text-sm px-2 py-0.5 rounded border ${VERDICT_COLOR[selected.ai_verdict] || ""}`}>
+                      <span className={`mt-2 inline-block text-sm px-2.5 py-0.5 rounded-full border ${VERDICT_COLOR[selected.ai_verdict] || ""}`}>
                         {selected.ai_verdict}
                       </span>
                     )}
                     {selected.ai_apply && (
-                      <p className="text-xs text-gray-500 mt-1">Rec: {selected.ai_apply}</p>
+                      <p className="text-xs text-slate-500 mt-1.5">Rec: {selected.ai_apply}</p>
                     )}
                   </div>
                 </div>
 
                 {/* One-line AI summary */}
                 {selected.ai_verdict_reason && (
-                  <p className="mt-3 text-sm text-gray-600 italic border-t pt-3">
+                  <p className="mt-4 text-sm text-slate-400 italic border-t border-slate-800 pt-3">
                     &ldquo;{selected.ai_verdict_reason}&rdquo;
                   </p>
                 )}
@@ -641,45 +655,45 @@ export default function Home() {
                 <div className="flex gap-2 mt-4 flex-wrap items-center">
                   <select value={selected.status}
                     onChange={(e) => updateStatus(selected.id, e.target.value)}
-                    className="border rounded-lg px-3 py-1.5 text-sm">
+                    className="bg-slate-800 border border-slate-700 text-slate-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
                     {STATUS_OPTIONS.map((s) => (
                       <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                     ))}
                   </select>
                   {selected.url && (
                     <a href={selected.url} target="_blank" rel="noopener noreferrer"
-                      className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-indigo-700">
+                      className="bg-gradient-to-r from-indigo-500 to-violet-600 text-white px-4 py-1.5 rounded-lg text-sm hover:from-indigo-400 hover:to-violet-500 shadow-lg shadow-indigo-500/20 transition-all">
                       Apply ↗
                     </a>
                   )}
                   <button onClick={analyzeGaps} disabled={generating || gapLoading}
-                    className="bg-amber-500 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-amber-600 disabled:opacity-50">
+                    className="bg-amber-500/90 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-amber-500 disabled:opacity-40 transition-colors">
                     {gapLoading ? "Analysing…" : "Analyse Gaps"}
                   </button>
                   <button onClick={generateResume} disabled={generating || gapLoading}
-                    className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-emerald-700 disabled:opacity-50">
+                    className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-emerald-500 disabled:opacity-40 transition-colors">
                     {generating && tab === "resume" ? "Generating…" : gapSuggestions.some(s => s.accepted) ? `Tailor Resume (${gapSuggestions.filter(s=>s.accepted).length} fixes)` : "Tailor Resume"}
                   </button>
                   <button onClick={generateCover} disabled={generating}
-                    className="bg-violet-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-violet-700 disabled:opacity-50">
+                    className="bg-violet-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-violet-500 disabled:opacity-40 transition-colors">
                     {generating && tab === "cover" ? "Generating…" : "Cover Letter"}
                   </button>
                 </div>
 
                 {/* Error banner */}
                 {genError && (
-                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-lg text-sm text-rose-300">
                     ⚠ {genError}
                   </div>
                 )}
               </div>
 
               {/* Tabs */}
-              <div className="flex gap-1 border-b">
+              <div className="flex gap-1 border-b border-slate-800">
                 {(["analysis", "resume", "cover"] as const).map((t) => (
                   <button key={t} onClick={() => setTab(t)}
                     className={`px-4 py-2 text-sm font-medium capitalize border-b-2 -mb-px transition-colors ${
-                      tab === t ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"
+                      tab === t ? "border-indigo-400 text-indigo-300" : "border-transparent text-slate-500 hover:text-slate-300"
                     }`}>
                     {t === "analysis" ? "Analysis" : t === "resume" ? "Resume" : "Cover Letter"}
                   </button>
@@ -691,9 +705,9 @@ export default function Home() {
                 <div className="space-y-4">
                   {/* Score breakdown */}
                   {selected.ai_breakdown && (
-                    <div className="bg-white rounded-xl border p-4 shadow-sm">
-                      <h3 className="font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wide">Score Breakdown</h3>
-                      <div className="space-y-2">
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg shadow-black/20">
+                      <h3 className="font-semibold text-slate-200 mb-3 text-sm uppercase tracking-wide">Score Breakdown</h3>
+                      <div className="space-y-2.5">
                         {[
                           { label: "Required Skills",  val: selected.ai_breakdown.required_skills,  max: 50 },
                           { label: "Preferred Skills", val: selected.ai_breakdown.preferred_skills, max: 25 },
@@ -701,12 +715,12 @@ export default function Home() {
                           { label: "ATS Keywords",     val: selected.ai_breakdown.ats_coverage,     max: 15 },
                         ].map(({ label, val, max }) => (
                           <div key={label}>
-                            <div className="flex justify-between text-xs text-gray-600 mb-1">
+                            <div className="flex justify-between text-xs text-slate-400 mb-1">
                               <span>{label}</span>
-                              <span className="font-medium">{val ?? 0}/{max}</span>
+                              <span className="font-medium text-slate-300">{val ?? 0}/{max}</span>
                             </div>
-                            <div className="bg-gray-100 rounded-full h-2">
-                              <div className="bg-indigo-500 h-2 rounded-full transition-all"
+                            <div className="bg-slate-800 rounded-full h-2">
+                              <div className="bg-gradient-to-r from-indigo-500 to-violet-500 h-2 rounded-full transition-all"
                                 style={{ width: `${Math.min(100, ((val ?? 0) / max) * 100)}%` }} />
                             </div>
                           </div>
@@ -717,33 +731,33 @@ export default function Home() {
 
                   {/* Matches & Gaps */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white rounded-xl border p-4 shadow-sm">
-                      <h3 className="font-semibold text-green-700 mb-2 text-sm">
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg shadow-black/20">
+                      <h3 className="font-semibold text-emerald-400 mb-2 text-sm">
                         ✓ Matches ({safeArr(selected.ai_matches).length})
                       </h3>
                       {safeArr(selected.ai_matches).length === 0
-                        ? <p className="text-xs text-gray-400">None identified</p>
+                        ? <p className="text-xs text-slate-500">None identified</p>
                         : (
-                          <ul className="space-y-1">
+                          <ul className="space-y-1.5">
                             {safeArr(selected.ai_matches).map((m, i) => (
-                              <li key={i} className="text-sm text-gray-700 flex gap-1.5">
-                                <span className="text-green-500 shrink-0">+</span>{m}
+                              <li key={i} className="text-sm text-slate-300 flex gap-1.5">
+                                <span className="text-emerald-400 shrink-0">+</span>{m}
                               </li>
                             ))}
                           </ul>
                         )}
                     </div>
-                    <div className="bg-white rounded-xl border p-4 shadow-sm">
-                      <h3 className="font-semibold text-red-600 mb-2 text-sm">
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg shadow-black/20">
+                      <h3 className="font-semibold text-rose-400 mb-2 text-sm">
                         ✗ Gaps ({safeArr(selected.ai_gaps).length})
                       </h3>
                       {safeArr(selected.ai_gaps).length === 0
-                        ? <p className="text-xs text-gray-400">No gaps found</p>
+                        ? <p className="text-xs text-slate-500">No gaps found</p>
                         : (
-                          <ul className="space-y-1">
+                          <ul className="space-y-1.5">
                             {safeArr(selected.ai_gaps).map((g, i) => (
-                              <li key={i} className="text-sm text-gray-700 flex gap-1.5">
-                                <span className="text-red-400 shrink-0">–</span>{g}
+                              <li key={i} className="text-sm text-slate-300 flex gap-1.5">
+                                <span className="text-rose-400 shrink-0">–</span>{g}
                               </li>
                             ))}
                           </ul>
@@ -753,25 +767,25 @@ export default function Home() {
 
                   {/* Red flags */}
                   {safeArr(selected.ai_red_flags).length > 0 && (
-                    <div className="bg-red-50 rounded-xl border border-red-200 p-4">
-                      <h3 className="font-semibold text-red-700 mb-2 text-sm">⚠ Red Flags</h3>
+                    <div className="bg-rose-500/10 rounded-2xl border border-rose-500/25 p-4">
+                      <h3 className="font-semibold text-rose-300 mb-2 text-sm">⚠ Red Flags</h3>
                       <ul className="space-y-1">
                         {safeArr(selected.ai_red_flags).map((f, i) => (
-                          <li key={i} className="text-sm text-red-700">• {f}</li>
+                          <li key={i} className="text-sm text-rose-200/90">• {f}</li>
                         ))}
                       </ul>
                     </div>
                   )}
 
                   {/* ATS Keywords */}
-                  <div className="bg-white rounded-xl border p-4 shadow-sm">
-                    <h3 className="font-semibold text-gray-800 mb-3 text-sm">ATS Keywords</h3>
+                  <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg shadow-black/20">
+                    <h3 className="font-semibold text-slate-200 mb-3 text-sm">ATS Keywords</h3>
                     {safeArr(selected.ai_keywords_present).length > 0 && (
                       <>
-                        <p className="text-xs text-gray-400 mb-1">Present in your profile:</p>
+                        <p className="text-xs text-slate-500 mb-1.5">Present in your profile:</p>
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {safeArr(selected.ai_keywords_present).map((k) => (
-                            <span key={k} className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full border border-green-200">
+                            <span key={k} className="text-xs bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/25">
                               {k}
                             </span>
                           ))}
@@ -780,10 +794,10 @@ export default function Home() {
                     )}
                     {safeArr(selected.ai_keywords_missing).length > 0 && (
                       <>
-                        <p className="text-xs text-gray-400 mb-1">Missing — add to resume:</p>
+                        <p className="text-xs text-slate-500 mb-1.5">Missing — add to resume:</p>
                         <div className="flex flex-wrap gap-1.5">
                           {safeArr(selected.ai_keywords_missing).map((k) => (
-                            <span key={k} className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full border border-red-200">
+                            <span key={k} className="text-xs bg-rose-500/10 text-rose-300 px-2 py-0.5 rounded-full border border-rose-500/25">
                               {k}
                             </span>
                           ))}
@@ -791,17 +805,17 @@ export default function Home() {
                       </>
                     )}
                     {!safeArr(selected.ai_keywords_present).length && !safeArr(selected.ai_keywords_missing).length && (
-                      <p className="text-xs text-gray-400">No keyword data yet — re-score this job to populate.</p>
+                      <p className="text-xs text-slate-500">No keyword data yet — re-score this job to populate.</p>
                     )}
                   </div>
 
                   {/* Full JD */}
                   {selected.description && (
-                    <details className="bg-white rounded-xl border shadow-sm">
-                      <summary className="p-4 cursor-pointer font-semibold text-gray-800 text-sm select-none">
+                    <details className="bg-slate-900 rounded-2xl border border-slate-800 shadow-lg shadow-black/20">
+                      <summary className="p-4 cursor-pointer font-semibold text-slate-200 text-sm select-none hover:text-white">
                         Full Job Description
                       </summary>
-                      <pre className="p-4 text-xs text-gray-600 whitespace-pre-wrap border-t overflow-auto max-h-80 leading-relaxed">
+                      <pre className="p-4 text-xs text-slate-400 whitespace-pre-wrap border-t border-slate-800 overflow-auto max-h-80 leading-relaxed">
                         {selected.description}
                       </pre>
                     </details>
@@ -815,75 +829,75 @@ export default function Home() {
 
                   {/* Gap loading state */}
                   {gapLoading && (
-                    <div className="bg-white rounded-xl border p-6 text-center shadow-sm">
-                      <div className="text-amber-500 animate-pulse font-medium">Analysing gaps between your resume and this JD…</div>
-                      <p className="text-gray-400 text-sm mt-1">Comparing requirements, identifying missing keywords, suggesting honest fixes</p>
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 text-center shadow-lg shadow-black/20">
+                      <div className="text-amber-400 animate-pulse font-medium">Analysing gaps between your resume and this JD…</div>
+                      <p className="text-slate-500 text-sm mt-1">Comparing requirements, identifying missing keywords, suggesting honest fixes</p>
                     </div>
                   )}
 
                   {/* Gap suggestions */}
                   {!gapLoading && gapSuggestions.length > 0 && !resumeResult && (
-                    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-                      <div className="p-4 border-b bg-amber-50 flex items-center justify-between">
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-lg shadow-black/20 overflow-hidden">
+                      <div className="p-4 border-b border-slate-800 bg-amber-500/10 flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-amber-900">
+                          <h3 className="font-semibold text-amber-300">
                             {gapSuggestions.length} Gap{gapSuggestions.length !== 1 ? "s" : ""} Found
                           </h3>
-                          <p className="text-xs text-amber-700 mt-0.5">
-                            Review each suggestion. Accept the ones you want included in your resume, then click &ldquo;Tailor Resume&rdquo;.
+                          <p className="text-xs text-amber-400/80 mt-0.5">
+                            Review each suggestion. Accept the ones you want included, then click &ldquo;Tailor Resume&rdquo;.
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={acceptAll} className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200">Accept All</button>
-                          <button onClick={rejectAll} className="text-xs bg-red-50 text-red-600 px-3 py-1 rounded hover:bg-red-100">Reject All</button>
+                          <button onClick={acceptAll} className="text-xs bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-md hover:bg-emerald-500/25">Accept All</button>
+                          <button onClick={rejectAll} className="text-xs bg-rose-500/10 text-rose-300 border border-rose-500/25 px-3 py-1 rounded-md hover:bg-rose-500/20">Reject All</button>
                         </div>
                       </div>
 
-                      <div className="divide-y">
+                      <div className="divide-y divide-slate-800">
                         {gapSuggestions.map((s, i) => (
-                          <div key={i} className={`p-4 transition-colors ${s.accepted ? "bg-white" : "bg-gray-50 opacity-60"}`}>
+                          <div key={i} className={`p-4 transition-colors ${s.accepted ? "bg-slate-900" : "bg-slate-950/50 opacity-50"}`}>
                             <div className="flex items-start gap-3">
                               <input type="checkbox" checked={s.accepted} onChange={() => toggleSuggestion(i)}
-                                className="mt-1 h-4 w-4 rounded border-gray-300 text-indigo-600 cursor-pointer shrink-0" />
+                                className="mt-1 h-4 w-4 rounded bg-slate-800 border-slate-600 text-indigo-500 focus:ring-indigo-500/50 cursor-pointer shrink-0" />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{s.section}</span>
+                                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{s.section}</span>
                                   <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                                     s.risk === "safe"
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-orange-100 text-orange-700"
+                                      ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/25"
+                                      : "bg-orange-500/15 text-orange-300 border border-orange-500/25"
                                   }`}>
                                     {s.risk === "safe" ? "✓ Safe" : "⚠ Stretch"}
                                   </span>
                                 </div>
 
-                                <p className="text-sm font-medium text-gray-900 mt-1">{s.gap}</p>
-                                <p className="text-xs text-red-600 mt-0.5">{s.impact}</p>
+                                <p className="text-sm font-medium text-slate-100 mt-1.5">{s.gap}</p>
+                                <p className="text-xs text-rose-400 mt-0.5">{s.impact}</p>
 
-                                <div className="mt-2 p-2 bg-indigo-50 border border-indigo-100 rounded text-xs">
-                                  <span className="font-semibold text-indigo-700">Suggested fix: </span>
-                                  <span className="text-indigo-900">{s.suggestion}</span>
+                                <div className="mt-2 p-2.5 bg-indigo-500/10 border border-indigo-500/25 rounded-lg text-xs">
+                                  <span className="font-semibold text-indigo-300">Suggested fix: </span>
+                                  <span className="text-indigo-100">{s.suggestion}</span>
                                 </div>
 
-                                <div className="mt-2 p-2 bg-emerald-50 border border-emerald-100 rounded">
-                                  <p className="text-xs font-semibold text-emerald-700 mb-0.5">Exact text to use:</p>
-                                  <p className="text-xs text-emerald-900 font-mono leading-relaxed">{s.new_text}</p>
+                                <div className="mt-2 p-2.5 bg-emerald-500/10 border border-emerald-500/25 rounded-lg">
+                                  <p className="text-xs font-semibold text-emerald-300 mb-0.5">Exact text to use:</p>
+                                  <p className="text-xs text-emerald-100 font-mono leading-relaxed">{s.new_text}</p>
                                 </div>
 
-                                <p className="text-xs text-gray-500 mt-1.5 italic">{s.rationale}</p>
+                                <p className="text-xs text-slate-500 mt-1.5 italic">{s.rationale}</p>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
 
-                      <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
-                        <p className="text-sm text-gray-600">
-                          <span className="font-semibold text-green-700">{gapSuggestions.filter(s => s.accepted).length}</span> accepted ·{" "}
-                          <span className="font-semibold text-gray-400">{gapSuggestions.filter(s => !s.accepted).length}</span> rejected
+                      <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between">
+                        <p className="text-sm text-slate-400">
+                          <span className="font-semibold text-emerald-400">{gapSuggestions.filter(s => s.accepted).length}</span> accepted ·{" "}
+                          <span className="font-semibold text-slate-500">{gapSuggestions.filter(s => !s.accepted).length}</span> rejected
                         </p>
                         <button onClick={generateResume} disabled={generating}
-                          className="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+                          className="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-40 transition-colors">
                           {generating ? "Generating…" : `Generate Resume with ${gapSuggestions.filter(s=>s.accepted).length} Fix${gapSuggestions.filter(s=>s.accepted).length !== 1 ? "es" : ""}`}
                         </button>
                       </div>
@@ -891,37 +905,37 @@ export default function Home() {
                   )}
 
                   {!gapLoading && gapSuggestions.length === 0 && !resumeResult && !generating && (
-                    <div className="bg-white rounded-xl border p-8 text-center text-gray-400 shadow-sm">
-                      <p className="font-medium text-gray-700">Step 1 — Analyse Gaps</p>
-                      <p className="text-sm mt-1">Click <span className="text-amber-600 font-medium">&ldquo;Analyse Gaps&rdquo;</span> to see what&apos;s missing from your resume for this role.</p>
-                      <p className="text-sm mt-1 text-gray-400">Accept the suggested fixes, then click <span className="text-emerald-700 font-medium">&ldquo;Tailor Resume&rdquo;</span> to generate a DOCX with all improvements applied.</p>
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8 text-center text-slate-500 shadow-lg shadow-black/20">
+                      <p className="font-medium text-slate-200">Step 1 — Analyse Gaps</p>
+                      <p className="text-sm mt-1.5">Click <span className="text-amber-400 font-medium">&ldquo;Analyse Gaps&rdquo;</span> to see what&apos;s missing from your resume for this role.</p>
+                      <p className="text-sm mt-1 text-slate-500">Accept the suggested fixes, then click <span className="text-emerald-400 font-medium">&ldquo;Tailor Resume&rdquo;</span> to generate a DOCX with all improvements applied.</p>
                     </div>
                   )}
                   {generating && tab === "resume" && (
-                    <div className="bg-white rounded-xl border p-8 text-center shadow-sm">
-                      <div className="text-indigo-500 animate-pulse text-base font-medium">Tailoring resume with Claude…</div>
-                      <p className="text-gray-400 text-sm mt-2">Analysing JD · rewriting bullets · optimising ATS keywords</p>
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8 text-center shadow-lg shadow-black/20">
+                      <div className="text-indigo-400 animate-pulse text-base font-medium">Tailoring resume with Claude…</div>
+                      <p className="text-slate-500 text-sm mt-2">Analysing JD · rewriting bullets · optimising ATS keywords</p>
                     </div>
                   )}
                   {resumeResult && (
                     <>
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 shadow-sm flex items-center justify-between">
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 shadow-lg shadow-black/20 flex items-center justify-between">
                         <div>
-                          <p className="font-semibold text-emerald-800">Resume ready ✓</p>
-                          <p className="text-sm text-emerald-600 mt-0.5">{resumeResult.filename}</p>
+                          <p className="font-semibold text-emerald-300">Resume ready ✓</p>
+                          <p className="text-sm text-emerald-400/80 mt-0.5">{resumeResult.filename}</p>
                         </div>
                         <button onClick={downloadResume}
-                          className="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-emerald-700">
+                          className="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-emerald-500 transition-colors">
                           Download DOCX
                         </button>
                       </div>
                       {resumeResult.keyword_matches?.length > 0 && (
-                        <div className="bg-white rounded-xl border p-4 shadow-sm">
-                          <h3 className="font-semibold text-gray-800 mb-3 text-sm">ATS Keyword Match</h3>
+                        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-lg shadow-black/20">
+                          <h3 className="font-semibold text-slate-200 mb-3 text-sm">ATS Keyword Match</h3>
                           <div className="overflow-auto max-h-64">
                             <table className="w-full text-xs">
                               <thead>
-                                <tr className="border-b text-left text-gray-500">
+                                <tr className="border-b border-slate-800 text-left text-slate-500">
                                   <th className="pb-2 pr-4">Keyword</th>
                                   <th className="pb-2 pr-4">Status</th>
                                   <th className="pb-2">Evidence</th>
@@ -929,16 +943,16 @@ export default function Home() {
                               </thead>
                               <tbody>
                                 {resumeResult.keyword_matches.map((km, i) => (
-                                  <tr key={i} className="border-b border-gray-50">
-                                    <td className="py-1.5 pr-4 font-medium">{km.keyword}</td>
+                                  <tr key={i} className="border-b border-slate-800/50">
+                                    <td className="py-1.5 pr-4 font-medium text-slate-300">{km.keyword}</td>
                                     <td className="py-1.5 pr-4">
                                       <span className={`px-1.5 py-0.5 rounded text-xs ${
-                                        km.status === "found"   ? "bg-green-100 text-green-700" :
-                                        km.status === "implied" ? "bg-yellow-100 text-yellow-700" :
-                                                                  "bg-red-100 text-red-600"
+                                        km.status === "found"   ? "bg-emerald-500/15 text-emerald-300" :
+                                        km.status === "implied" ? "bg-amber-500/15 text-amber-300" :
+                                                                  "bg-rose-500/15 text-rose-300"
                                       }`}>{km.status}</span>
                                     </td>
-                                    <td className="py-1.5 text-gray-500">{km.evidence}</td>
+                                    <td className="py-1.5 text-slate-500">{km.evidence}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -953,27 +967,27 @@ export default function Home() {
 
               {/* ── Cover letter tab ── */}
               {tab === "cover" && (
-                <div className="bg-white rounded-xl border shadow-sm">
+                <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-lg shadow-black/20">
                   {!coverLetter && !generating && (
-                    <div className="p-8 text-center text-gray-400">
+                    <div className="p-8 text-center text-slate-500">
                       Click &ldquo;Cover Letter&rdquo; to generate a tailored letter.
                     </div>
                   )}
                   {generating && tab === "cover" && (
-                    <div className="p-8 text-center text-indigo-500 animate-pulse font-medium">
+                    <div className="p-8 text-center text-indigo-400 animate-pulse font-medium">
                       Writing cover letter with Claude…
                     </div>
                   )}
                   {coverLetter && (
                     <>
-                      <div className="p-3 border-b flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-700">Cover Letter</span>
+                      <div className="p-3 border-b border-slate-800 flex justify-between items-center">
+                        <span className="text-sm font-medium text-slate-300">Cover Letter</span>
                         <button onClick={() => navigator.clipboard.writeText(coverLetter)}
-                          className="text-xs bg-gray-100 px-3 py-1 rounded hover:bg-gray-200">
+                          className="text-xs bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-md hover:bg-slate-700">
                           Copy
                         </button>
                       </div>
-                      <pre className="p-5 text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{coverLetter}</pre>
+                      <pre className="p-5 text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{coverLetter}</pre>
                     </>
                   )}
                 </div>
