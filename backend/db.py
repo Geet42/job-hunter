@@ -154,13 +154,14 @@ _SENIOR_TITLE_RE = _re.compile(
     _re.IGNORECASE,
 )
 _SENIOR_EXP_RE = _re.compile(
-    r'\b([3-9]|1[0-9])\+?\s*years?\b'
-    r'|minimum\s*(of\s*)?([3-9]|1[0-9])\s*years?\b'
-    r'|at\s*least\s*([3-9]|1[0-9])\s*years?\b'
-    r'|\b([3-9]|1[0-9])\+\s*yrs?\b',
+    r'(?<![\d-])([2-9]|1[0-9])\+?\s*years?\b'
+    r'|minimum\s*(of\s*)?([2-9]|1[0-9])\s*years?\b'
+    r'|at\s*least\s*([2-9]|1[0-9])\s*years?\b'
+    r'|(?<![\d-])([2-9]|1[0-9])\+\s*yrs?\b',
     _re.IGNORECASE,
 )
-_RANGE_EXP_RE = _re.compile(r'\b\d+\s*[-]\s*(\d+)\+?\s*years?\b', _re.IGNORECASE)
+# group(1)=lower bound, group(2)=upper. Reject if lower >= 2 (minimum 2 yrs).
+_RANGE_EXP_RE = _re.compile(r'\b(\d+)\s*[-–]\s*(\d+)\+?\s*years?\b', _re.IGNORECASE)
 _DO_NOT_APPLY_RE = _re.compile(
     r'(intern|new\s*grad).*?please\s*do\s*not\s*apply'
     r'|if\s+you\s+are\s+(an?\s+)?(intern|new\s*grad).*?do\s*not\s*apply',
@@ -186,7 +187,7 @@ def is_bad_job(job: dict) -> bool:
     if _SENIOR_EXP_RE.search(desc) and not title_entry:
         return True
     for m in _RANGE_EXP_RE.finditer(desc):
-        if int(m.group(1)) >= 5 and not title_entry:
+        if int(m.group(1)) >= 2 and not title_entry:  # lower bound >= 2 yrs
             return True
     return False
 

@@ -112,21 +112,22 @@ _SENIOR_TITLE_RE = re.compile(
 
 # ── Description-level experience requirement filter ──────────
 
-# Matches: "3+ years", "5 years of experience", "5 years of software development",
-# "minimum 5 years", "at least 4 years", "5+ yrs", etc.
-# Intentionally broad — if a JD says "5+ years" in any context, it's not entry-level.
+# Matches: "2+ years", "2 years of experience", "minimum 3 years", "at least 4 years",
+# "5+ yrs", etc. Requires >= 2 years -> not entry-level for a <1yr candidate.
+# The (?<![\d-]) lookbehind prevents matching the "2" inside a range like "0-2"/"1-2".
 _SENIOR_EXP_RE = re.compile(
-    r'\b([3-9]|1[0-9])\+?\s*years?\b'      # "3 years", "5+ years", "10 years"
-    r'|minimum\s*(of\s*)?([3-9]|1[0-9])\s*years?\b'   # "minimum 4 years"
-    r'|at\s*least\s*([3-9]|1[0-9])\s*years?\b'        # "at least 5 years"
-    r'|\b([3-9]|1[0-9])\+\s*yrs?\b',                  # "5+ yrs"
+    r'(?<![\d-])([2-9]|1[0-9])\+?\s*years?\b'         # "2 years", "5+ years", "10 years"
+    r'|minimum\s*(of\s*)?([2-9]|1[0-9])\s*years?\b'   # "minimum 2 years"
+    r'|at\s*least\s*([2-9]|1[0-9])\s*years?\b'        # "at least 2 years"
+    r'|(?<![\d-])([2-9]|1[0-9])\+\s*yrs?\b',          # "2+ yrs"
     re.IGNORECASE,
 )
 
-# Range patterns like "2-12+ years", "2-10+ years", "3-5 years"
-# Reject if the upper bound is >= 5 (clearly not entry-level)
+# Range patterns like "0-2 years", "1-3 years", "2-5 years".
+# group(1) = lower bound, group(2) = upper bound. Reject if the LOWER bound is
+# >= 2 (i.e. minimum 2 years required). "0-2"/"1-2" are kept (accept entry-level).
 _EXP_RANGE_RE = re.compile(
-    r'\b\d+\s*[-–]\s*(\d+)\+?\s*years?\b',
+    r'\b(\d+)\s*[-–]\s*(\d+)\+?\s*years?\b',
     re.IGNORECASE,
 )
 
@@ -172,15 +173,16 @@ def _is_engineering_role(job: dict) -> bool:
         print(f"[scraper] Filtered (too senior title): {job.get('title')}")
         return False
 
-    # Layer 3a — description says 3+ years required
+    # Layer 3a — description requires 2+ years
     if _SENIOR_EXP_RE.search(desc) and not title_is_entry_level:
-        print(f"[scraper] Filtered (3+ yrs required): {job.get('title')}")
+        print(f"[scraper] Filtered (2+ yrs required): {job.get('title')}")
         return False
 
-    # Layer 3b — range pattern like "2-12+ years", "2-10+ years": reject if upper bound >= 5
+    # Layer 3b — range pattern: reject if LOWER bound >= 2 (minimum 2 years).
+    # "0-2"/"1-2"/"1-3" are kept because they accept an entry-level candidate.
     for m in _EXP_RANGE_RE.finditer(desc):
-        upper = int(m.group(1))
-        if upper >= 5 and not title_is_entry_level:
+        lower = int(m.group(1))
+        if lower >= 2 and not title_is_entry_level:
             print(f"[scraper] Filtered (range {m.group(0)}): {job.get('title')}")
             return False
 
